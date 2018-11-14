@@ -9,13 +9,13 @@ class RPCServer(threading.Thread):
         self.system_info = dict()
         self.server = SimpleXMLRPCServer(('localhost', port), logRequests=True)
         self.server.register_function(self.send_info, send_function)
-        print('print RPC thread ready.')
+        print('RPC thread ready.')
 
     def send_info(self):
         return self.system_info
 
     def refresh_info(self, new_data):
-        self.system_info.update()
+        self.system_info.update(new_data)
 
     def run(self):
         self.server.serve_forever()
