@@ -29,7 +29,7 @@ ANN_Error_train = np.empty(K)          # Train error (Artificial Neural Network)
 ANN_Error_test = np.empty(K)           # Test error (Artificial Neural Network)
 adam = optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
 
-n_hidden_units_test = [22, 24, 26, 28]         # number of hidden units to check (multiplied by the number of inputs)
+n_hidden_units_test = [4, 8, 16, 24, 36]    # number of hidden units to check (multiplied by the number of inputs)
 n_train = 2                                 # number of networks trained in each k-fold
 batching_size = 200                         # bathching size for the training
 max_epochs = 1000                           # stop criterion 2 (max epochs in training)
