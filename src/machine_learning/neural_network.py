@@ -9,7 +9,7 @@ from keras.layers import Dense, Activation
 from keras import optimizers
 
 #%% FIRST PART: read original data
-raw_data = pd.read_csv('data/original_data.csv', index_col=0)  # Read the CSV file
+raw_data = pd.read_csv('data/input_output_data.csv', index_col=0)  # Read the CSV file
 raw_data_np = raw_data.values
 print(raw_data.head())
 y = raw_data_np[:, 0]
@@ -27,11 +27,11 @@ CV = KFold(n_splits=K, shuffle=True)
 ANN_hidden_units = np.empty(K)         # Number of hidden units (Artificial Neural Network)
 ANN_Error_train = np.empty(K)          # Train error (Artificial Neural Network)
 ANN_Error_test = np.empty(K)           # Test error (Artificial Neural Network)
-adam = optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
+adam = optimizers.Adam(lr=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
 
-n_hidden_units_test = [4, 8, 16, 24, 36]    # number of hidden units to check (multiplied by the number of inputs)
+n_hidden_units_test = [50, 100, 150, 200]   # number of hidden units to check (multiplied by the number of inputs)
 n_train = 2                                 # number of networks trained in each k-fold
-batching_size = 200                         # bathching size for the training
+batching_size = 2000                        # bathching size for the training
 max_epochs = 1000                           # stop criterion 2 (max epochs in training)
 
 k = 0
@@ -50,7 +50,7 @@ for train_index, test_index in CV.split(X):  # Outer 2-layer cross-validation lo
     CV_ANN = KFold(K_internal, shuffle=True)
     inner_k = 0
     for ann_train_index, ann_test_index in CV_ANN.split(X_train):
-        print("\n INNER CROSS-VALIDATION {0}/{1}".format(inner_k + 1, K_internal))
+        print("   INNER CROSS-VALIDATION {0}/{1}".format(inner_k + 1, K_internal))
         X_ANN_train = X_train[ann_train_index]
         y_ANN_train = y_train[ann_train_index]
         X_ANN_test = X_train[ann_test_index]
@@ -61,9 +61,9 @@ for train_index, test_index in CV.split(X):  # Outer 2-layer cross-validation lo
         best_val_error = np.inf
         bestlayer = None
         for n_hidden_units in n_hidden_units_test:
-            print("   training with {0} hidden units...".format(n_hidden_units))
+            print("      training with {0} hidden units...".format(n_hidden_units))
             for i in range(n_train):
-                print('   training network {0}/{1}...'.format(i + 1, n_train))
+                print('         training network {0}/{1}...'.format(i + 1, n_train))
 
                 model = Sequential()
                 model.add(Dense(n_hidden_units, input_shape=(M,)))
@@ -75,14 +75,15 @@ for train_index, test_index in CV.split(X):  # Outer 2-layer cross-validation lo
                                     verbose=0, validation_data=(X_ANN_test, y_ANN_test))
                 train_error = history.history['loss'][-1]
                 val_error = history.history['val_loss'][-1]
-                print('        Training error: {0}'.format(train_error))
+                print('         Training error: {0}'.format(train_error))
+                print('         Validation error: {0}'.format(val_error))
                 if train_error < best_train_error:
                     bestnet = model
                     best_train_error = train_error
                     best_val_error = val_error
                     bestlayer = n_hidden_units
-        print('Best train error: {0} (with {1} hidden layers)'.format(best_train_error, bestlayer))
-        print('Best validation error: {0} (with {1} hidden layers)'.format(best_val_error, bestlayer))
+        print('   Best train error: {0} (with {1} hidden layers)'.format(best_train_error, bestlayer))
+        print('   Best validation error: {0} (with {1} hidden layers)'.format(best_val_error, bestlayer))
         inner_fold_error_ANN[inner_k] = best_val_error
         n_hidden_units_select[inner_k] = bestlayer
         inner_k += 1
@@ -106,10 +107,17 @@ for train_index, test_index in CV.split(X):  # Outer 2-layer cross-validation lo
         train_error = history.history['loss'][-1]
         val_error = history.history['val_loss'][-1]
         print('        Training error: {0}'.format(train_error))
+        print('        Validation error: {0}'.format(val_error))
         if train_error < best_train_error:
             bestnet = model
             best_train_error = train_error
             best_val_error = val_error
+    plt.figure(figsize=(12, 6))
+    plt.title('test values vs prediction (CV {0}/{1})'.format(k+1, K))
+    plt.xlabel('actual power')
+    plt.ylabel('predicted power')
+    plt.plot(y_test, bestnet.predict(X_test), '.')
+
     ANN_Error_train[k] = best_train_error
     ANN_Error_test[k] = best_val_error
     k += 1

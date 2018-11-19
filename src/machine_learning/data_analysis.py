@@ -5,7 +5,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 #%% FIRST PART: read original data
-raw_data = pd.read_csv('data/original_data.csv', index_col=0)  # Read the CSV file
+raw_data = pd.read_csv('data/input_output_data.csv', index_col=0, parse_dates=True)  # Read the CSV file
 raw_data_np = raw_data.values
 print(raw_data.head())
 y = raw_data_np[:, 0]
@@ -16,13 +16,28 @@ N, M = X.shape
 del raw_data_np
 
 #%% SECOND PART: data representation
+print(type(raw_data.index))
+time = raw_data.index.values.astype(np.int64) // 10 ** 9
 for column in list(raw_data):
     plt.figure(figsize=(12, 6))
     plt.title(column)
     plt.xlabel('time')
     plt.ylabel(column)
-    raw_data.plot.scatter(raw_data.index, column)
+    plt.plot(time, raw_data[column], '*')
+    plt.xticks(rotation='vertical')
+    #raw_data.plot.scatter(raw_data.ix, column)
     plt.show()
+
+for column1 in list(raw_data):
+    if column1 != 'output_power':
+        plt.figure(figsize=(12, 6))
+        plt.title('{0} vs output power'.format(column1))
+        plt.xlabel(column1)
+        plt.ylabel('output power')
+        plt.plot(raw_data[column1], raw_data['output_power'], '*')
+        plt.xticks(rotation='vertical')
+        # raw_data.plot.scatter(raw_data.ix, column)
+        plt.show()
 
 #%% THIRD PART: PCA Analysis
 scaler = StandardScaler()
@@ -35,10 +50,11 @@ for i in range(0, M):
     pca_info[i] = sum(pca.explained_variance_ratio_[0:i+1])
 for i in range(0, M):
     if pca_info[i] > 0.9:
-        print('We need at least ' + str(i) + ' PCA components in order to preserve 90% of information.')
+        print('We need at least ' + str(i+1) + ' PCA components in order to preserve 90% of information.')
         break
 plt.figure(figsize=(12, 6))
 plt.title('PCA Analysis')
 plt.xlabel('number of PC')
 plt.ylabel('explained variance')
-plt.plot(pca_info)
+plt.plot(range(1, M+1), pca_info)
+plt.show()
