@@ -27,9 +27,9 @@ CV = KFold(n_splits=K, shuffle=True)
 ANN_hidden_units = np.empty(K)         # Number of hidden units (Artificial Neural Network)
 ANN_Error_train = np.empty(K)          # Train error (Artificial Neural Network)
 ANN_Error_test = np.empty(K)           # Test error (Artificial Neural Network)
-adam = optimizers.Adam(lr=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
+adam = optimizers.Adam(lr=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00000001)
 
-n_hidden_units_test = [50, 100, 150, 200]   # number of hidden units to check (multiplied by the number of inputs)
+n_hidden_units_test = [150, 200, 250, 300]       # number of hidden units to check (multiplied by the number of inputs)
 n_train = 2                                 # number of networks trained in each k-fold
 batching_size = 2000                        # bathching size for the training
 max_epochs = 1000                           # stop criterion 2 (max epochs in training)
@@ -112,11 +112,13 @@ for train_index, test_index in CV.split(X):  # Outer 2-layer cross-validation lo
             bestnet = model
             best_train_error = train_error
             best_val_error = val_error
+
     plt.figure(figsize=(12, 6))
     plt.title('test values vs prediction (CV {0}/{1})'.format(k+1, K))
     plt.xlabel('actual power')
     plt.ylabel('predicted power')
     plt.plot(y_test, bestnet.predict(X_test), '.')
+    plt.show()
 
     ANN_Error_train[k] = best_train_error
     ANN_Error_test[k] = best_val_error
