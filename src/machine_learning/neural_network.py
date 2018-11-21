@@ -21,7 +21,8 @@ scaler = StandardScaler()
 X_std = scaler.fit_transform(X)  # standardize data
 
 #%% SECOND PART: two-layer cross-validation
-K = 5  # Outer cross-validation fold: 5-Fold
+K = 5  # Outer cross-validation fold
+K_internal = 5  # Inner cross-validation fold
 CV = KFold(n_splits=K, shuffle=True)
 # Initialize variables for artificial neural network
 ANN_hidden_units = np.empty(K)         # Number of hidden units (Artificial Neural Network)
@@ -29,9 +30,9 @@ ANN_Error_train = np.empty(K)          # Train error (Artificial Neural Network)
 ANN_Error_test = np.empty(K)           # Test error (Artificial Neural Network)
 adam = optimizers.Adam(lr=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00000001)
 
-n_hidden_units_test = [150, 200, 250, 300]       # number of hidden units to check (multiplied by the number of inputs)
+n_hidden_units_test = [200, 250, 300, 350]  # number of hidden units to check (multiplied by the number of inputs)
 n_train = 2                                 # number of networks trained in each k-fold
-batching_size = 2000                        # bathching size for the training
+batching_size = N // (K * K_internal)        # bathching size for the training
 max_epochs = 1000                           # stop criterion 2 (max epochs in training)
 
 k = 0
@@ -43,7 +44,6 @@ for train_index, test_index in CV.split(X):  # Outer 2-layer cross-validation lo
     X_test = X_std[test_index, :]
     y_test = y[test_index]
 
-    K_internal = 5
     n_hidden_units_select = np.empty(K_internal)  # Store the selected number of hidden units
     inner_fold_error_ANN = np.empty(K_internal)   # Store the error for each inner fold
 
@@ -95,8 +95,8 @@ for train_index, test_index in CV.split(X):  # Outer 2-layer cross-validation lo
     best_val_error = np.inf
     for i in range(n_train):
         model = Sequential()
-        aux = np.asscalar(n_hidden_units_select[best_index])
-        model.add(Dense(int(np.asscalar(n_hidden_units_select[best_index])), input_shape=(M,)))
+        aux = int(np.asscalar(n_hidden_units_select[best_index]))
+        model.add(Dense(aux, input_shape=(M,)))
         model.add(Activation('relu'))
         model.add(Dense(1))
         model.add(Activation('linear'))
@@ -113,11 +113,22 @@ for train_index, test_index in CV.split(X):  # Outer 2-layer cross-validation lo
             best_train_error = train_error
             best_val_error = val_error
 
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 9))
+    plt.title('train values vs prediction (CV {0}/{1})'.format(k + 1, K))
+    plt.xlabel('actual power')
+    plt.ylabel('predicted power')
+    plt.ticklabel_format(style='plain')
+    plt.plot(y_train, bestnet.predict(X_train), '.')
+    plt.plot(y_train, y_train)
+    plt.show()
+
+    plt.figure(figsize=(12, 9))
     plt.title('test values vs prediction (CV {0}/{1})'.format(k+1, K))
     plt.xlabel('actual power')
     plt.ylabel('predicted power')
+    plt.ticklabel_format(style='plain')
     plt.plot(y_test, bestnet.predict(X_test), '.')
+    plt.plot(y_test, y_test)
     plt.show()
 
     ANN_Error_train[k] = best_train_error
@@ -125,7 +136,7 @@ for train_index, test_index in CV.split(X):  # Outer 2-layer cross-validation lo
     k += 1
 
 # Figure with ANN generalization error
-plt.figure(figsize=(9, 6))
+plt.figure(figsize=(12, 9))
 plt.plot(range(1, ANN_Error_test.shape[0]+1), ANN_Error_test)
 plt.xlabel('Iteration')
 plt.ylabel('Squared error (crossvalidation)')
@@ -133,3 +144,50 @@ plt.title('Artificial Neural Network Generalization Error')
 plt.show()
 print('- [ANN] Number of hidden units for each fold: {0}'.format(str(ANN_hidden_units)))
 print('- [ANN] Generalization error for each fold: {0}'.format(str(ANN_Error_test)))
+
+#%% THIRD PART: training best model and storing it for further applications
+# Determine the best number of hidden units
+selected_hidden_units = {i: 0 for i in n_hidden_units_test}
+for i in ANN_hidden_units:
+    selected_hidden_units[i] += 1
+hid_units = (None, -1)
+for key, value in selected_hidden_units.items():
+    if value > hid_units[1]:
+        hid_units = (key, value)
+
+# Train best ANN with all the available data and store it
+bestnet = None
+best_train_error = np.inf
+best_val_error = np.inf
+for i in range(n_train):
+    model = Sequential()
+    model.add(Dense(hid_units[0], input_shape=(M,)))
+    model.add(Activation('relu'))
+    model.add(Dense(1))
+    model.add(Activation('linear'))
+    model.compile(loss='mean_squared_error', optimizer=adam)
+
+    history = model.fit(X_std, y, epochs=max_epochs, batch_size=batching_size, verbose=0)
+    train_error = history.history['loss'][-1]
+    print('        Training error: {0}'.format(train_error))
+    if train_error < best_train_error:
+        bestnet = model
+        best_train_error = train_error
+
+# Plot final model performance
+plt.figure(figsize=(12, 9))
+plt.title('train values vs prediction')
+plt.xlabel('actual power')
+plt.ylabel('predicted power')
+plt.ticklabel_format(style='plain')
+plt.plot(y, bestnet.predict(X_std), '.')
+plt.plot(y, y)
+plt.show()
+
+# serialize model to JSON
+model_json = bestnet.to_json()
+with open("data/ann_model.json", "w") as json_file:
+    json_file.write(model_json)
+# serialize weights to HDF5
+bestnet.save_weights("data/ann_weights.h5")
+print("Saved model to disk")
