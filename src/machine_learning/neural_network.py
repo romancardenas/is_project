@@ -8,7 +8,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation
 from keras import optimizers
 
-#%% FIRST PART: read original data
+#%% FIRST PART: read original data and normalise ti
 raw_data = pd.read_csv('data/input_output_data.csv', index_col=0)  # Read the CSV file
 raw_data_np = raw_data.values
 print(raw_data.head())
@@ -17,8 +17,15 @@ X = raw_data_np[:, 1:]
 y_name = list(raw_data)[0]
 feature_names = list(raw_data)[1:]
 N, M = X.shape
-scaler = StandardScaler()
-X_std = scaler.fit_transform(X)  # standardize data
+
+X_mean = X.mean(axis=0)
+X_std = X.std(axis=0)
+norm = np.concatenate((X_mean, X_std)).reshape(2, M).T
+norm = pd.DataFrame({'mean': norm[:, 0], 'std_deviation': norm[:, 1]})
+norm.to_csv('data/ann_normalization.csv', index=False)
+del norm
+
+X = (X - X_mean) / X_std
 
 #%% SECOND PART: two-layer cross-validation
 K = 5  # Outer cross-validation fold
