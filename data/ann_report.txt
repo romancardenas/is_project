@@ -1,4 +1,4 @@
-- [ANN] Number of hidden units for each fold: [200. 250. 250. 350. 250.]
-- [ANN] Generalization error for each fold: [4.24041381e+10 5.02122259e+10 5.19419341e+10 5.26894075e+10
- 4.75903993e+10]
-        Training error: 48764504269.73516
+*** ARTIFICIAL NEURAL NETWORK TRAINING REPORT (TWO-LAYER CROSS-VALIDATION) ***
+- Number of hidden units for each fold: [200. 250. 250. 200. 300.]
+- Generalization error for each fold: [3.91651750e+10 4.03269034e+10 4.07466684e+10 3.94241323e+10 4.15814943e+10]
+- Training error with all the data: 39898002145.28

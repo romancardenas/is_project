@@ -5,7 +5,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 #%% FIRST PART: read original data
-raw_data = pd.read_csv('data/input_output_data.csv', index_col=0, parse_dates=True)  # Read the CSV file
+raw_data = pd.read_csv('data/original_data.csv', index_col=0, parse_dates=True)  # Read the CSV file
 raw_data_np = raw_data.values
 print(raw_data.head())
 y = raw_data_np[:, 0]

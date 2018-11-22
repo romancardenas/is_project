@@ -4,6 +4,7 @@ import json
 import sys
 from hbmqtt.client import MQTTClient
 from hbmqtt.mqtt.constants import QOS_1
+from src.communication.server.predictor import Predictor
 
 
 class MQTTAgent(threading.Thread):
@@ -14,14 +15,23 @@ class MQTTAgent(threading.Thread):
         self.client = MQTTClient()
         self.broker_uri = broker_uri
         self.system_info = dict()
+        self.predictor = Predictor()
         print('MQTT thread ready.')
 
-    @staticmethod
-    def data_analysis(data):  # TODO
-        if data['status'] == 'active':
-            return 'stopped'
+    def data_analysis(self, data):
+        state = 'active'
+        prediction = self.predictor.predict(data)
+        value = data['output_power']
+        # TODO Substitute this silly comparison with a rule-based system
+        if prediction < value * 0.8:
+            print("TOO LOW")
+            state = 'stopped'
+        elif prediction > value * 1.2:
+            print("TOO HIGH")
+            state = 'stopped'
         else:
-            return 'active'
+            print("GOOD PREDICTION")
+        return state
 
     def get_data(self):
         return self.system_info

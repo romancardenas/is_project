@@ -7,7 +7,7 @@ from hbmqtt.mqtt.constants import QOS_1
 
 
 class WindTurbine(threading.Thread):
-    def __init__(self, broker_uri, id):
+    def __init__(self, broker_uri, id, data):
         super(WindTurbine, self).__init__(name='Wind turbine {0}'.format(id))
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)

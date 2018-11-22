@@ -2,14 +2,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
-from sklearn.preprocessing import StandardScaler
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation
 from keras import optimizers
 
 #%% FIRST PART: read original data and normalise ti
-raw_data = pd.read_csv('data/input_output_data.csv', index_col=0)  # Read the CSV file
+raw_data = pd.read_csv('data/data_training.csv', index_col=0)  # Read the CSV file
 raw_data_np = raw_data.values
 print(raw_data.head())
 y = raw_data_np[:, 0]
@@ -25,7 +24,7 @@ norm = pd.DataFrame({'mean': norm[:, 0], 'std_deviation': norm[:, 1]})
 norm.to_csv('data/ann_normalization.csv', index=False)
 del norm
 
-X = (X - X_mean) / X_std
+X_std = (X - X_mean) / X_std
 
 #%% SECOND PART: two-layer cross-validation
 K = 5  # Outer cross-validation fold
@@ -127,6 +126,7 @@ for train_index, test_index in CV.split(X):  # Outer 2-layer cross-validation lo
     plt.ticklabel_format(style='plain')
     plt.plot(y_train, bestnet.predict(X_train), '.')
     plt.plot(y_train, y_train)
+    plt.legend(['predictions', 'ideal'])
     plt.show()
 
     plt.figure(figsize=(12, 9))
@@ -136,6 +136,7 @@ for train_index, test_index in CV.split(X):  # Outer 2-layer cross-validation lo
     plt.ticklabel_format(style='plain')
     plt.plot(y_test, bestnet.predict(X_test), '.')
     plt.plot(y_test, y_test)
+    plt.legend(['predictions', 'ideal'])
     plt.show()
 
     ANN_Error_train[k] = best_train_error
@@ -189,6 +190,7 @@ plt.ylabel('predicted power')
 plt.ticklabel_format(style='plain')
 plt.plot(y, bestnet.predict(X_std), '.')
 plt.plot(y, y)
+plt.legend(['predictions', 'ideal'])
 plt.show()
 
 # serialize model to JSON
