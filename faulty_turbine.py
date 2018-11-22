@@ -31,7 +31,7 @@ def fu_data(data, failNum=2, minFaulty=3, maxFaulty=7, minBroken=3, maxBroken=5,
         
     while n>0:
         n=n-1
-        faultyStart=randint(maxFaulty*24+maxBroken*24+m*s,len(data0)-s*n-maxFaulty*24-maxBroken*24)
+        faultyStart=randint(300+m*s,len(data0)-s*n-300)
         brokenStart=randint(minFaulty*24,maxFaulty*24)+faultyStart
         brokenEnd=randint(minBroken*24,maxBroken*24)+brokenStart
         
