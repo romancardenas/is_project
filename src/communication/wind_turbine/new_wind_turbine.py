@@ -74,7 +74,6 @@ class WindTurbine(threading.Thread):
         await asyncio.sleep(1)
         await self.ready()
         while self.pointer<=self.faulty.shape[0]:
-            self.get_data()
             await self.publish()
             await self.listen()
             await asyncio.sleep(0.5)
