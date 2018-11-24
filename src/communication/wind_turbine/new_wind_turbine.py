@@ -7,13 +7,11 @@
 import asyncio
 import threading
 import json
-import sys
 from hbmqtt.client import MQTTClient
 from hbmqtt.mqtt.constants import QOS_1
-import sys
-sys.path.append("../../faulty_turbine")
-import faulty_turbine
+from src.faulty_turbine import faulty_turbine
 import pandas as pd
+import sys
 
 
 class WindTurbine(threading.Thread):
@@ -29,7 +27,7 @@ class WindTurbine(threading.Thread):
         self.data['state'] = pd.Series('w', index=data.index)
         self.pointer = 0
         faulty = self.data.copy()
-        self.faulty = faulty_turbine.fu_data(faulty)
+        self.faulty = faulty_turbine.fu_data(faulty, fum=1)
         print('Wind turbine {0} thread ready'.format(id))
 
     def get_data(self):
@@ -47,19 +45,19 @@ class WindTurbine(threading.Thread):
         return data0
     
     def process_message(self, msg):
-        if (msg == 'stop' & self.status=='active'):
-            realStatus = self.data.values[self.pointer-1,'status']
+        if (msg == 'stop' and self.status=='active'):
+            realStatus = self.faulty['state'].values[self.pointer-1]
             if realStatus == 'w':
                 print('Server commited an error, as there was no fault! But I am a good slave, so I stop...')
-                self.status='stop'
-                faulty_turbine.server_error(self.faulty, self.data, self.pointer)
+                self.status = 'stop'
+                self.faulty = faulty_turbine.server_error(self.faulty, self.data, self.pointer)
                 
             elif realStatus == 'r':
-                print('Server is such a smart guy')
+                print("I'm afraid it's too late...")
                 self.status='stop'
-                
             else:
-                faulty_turbine.fault_detected(self.faulty, self.data, self.pointer)
+                print('Server is such a smart guy')
+                self.faulty = faulty_turbine.fault_detected(self.faulty, self.data, self.pointer)
                 self.status='stop'
 
     async def ready(self):
@@ -95,7 +93,10 @@ class WindTurbine(threading.Thread):
 
 
 if __name__ == '__main__':
-    
-    df = pd.read_csv('../../../data/data_simulation.csv')
+
+    assert len(sys.argv) >= 3, "Must supply only 2 arguments.\n" + "Usage: wind_turbine.py id port"
+    scriptname, id, port, *arguments = sys.argv
+    df = pd.read_csv('data/data_simulation.csv')
     wind_turbine = WindTurbine('mqtt://localhost:{0}'.format(port), id, df)
+    wind_turbine.start()
 

@@ -56,7 +56,7 @@ def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5,
                     data0.iloc[i, data0.columns.get_loc('output_power')] = fum2(p,reduce)
                     data0.iloc[i, data0.columns.get_loc('state')] = 'f'
                 elif method==3:
-                    data0.iloc[i, data0.columns.get_loc('output_power')] = fum4(p, offset)
+                    data0.iloc[i, data0.columns.get_loc('output_power')] = fum3(p, offset)
                     data0.iloc[i, data0.columns.get_loc('state')] = 'f'
             elif ((i>=brokenStart)&(i<brokenEnd)):
                 data0.iloc[i, data0.columns.get_loc('output_power')] = 0
@@ -72,7 +72,7 @@ def fault_detected (data, dataR, posDet, repairTime=3):
         dataF.iloc[i, dataF.columns.get_loc('state')] = 'r'
     i=0
     for s in dataF['state']:
-        if (i>=posDet+repairTime):
+        if i >= posDet + repairTime * 24:
             if s != 'w':
                 dataF.iloc[i, dataF.columns.get_loc('output_power')] = dataR.iloc[i, dataR.columns.get_loc('output_power')]
                 dataF.iloc[i, dataF.columns.get_loc('state')] = 'w'
