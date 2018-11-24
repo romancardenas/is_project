@@ -16,6 +16,7 @@ class Predictor:
         adam = optimizers.Adam(lr=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00000001)
         loaded_model.compile(loss='mean_squared_error', optimizer=adam)
         self.model = loaded_model
+        self.model._make_predict_function()
         # load normalization data
         norm_data = pd.read_csv('data/ann_normalization.csv')
         self.mean = norm_data.values[:, [0]].T
@@ -25,8 +26,9 @@ class Predictor:
 
     def predict(self, data):
         aux = {i: [j] for i, j in data.items()}
+        del aux['status']
+        del aux['time']
         df = pd.DataFrame.from_dict(aux)
-        df = df.set_index('time')
         input_data = df.values[:, 1:]
         input_data = (input_data - self.mean) / self.std
         return self.model.predict(input_data)
@@ -35,7 +37,7 @@ class Predictor:
 if __name__ == '__main__':
     predictor = Predictor()
     # This is the first raw from data_simulation.csv
-    data = {'time': '2010-01-01 00:00:00+01:00', 'output_power': 2350610.791859267, 'wind_speed': 5.326969999999998,
+    data = {'status': 'active', 'time': '2010-01-01 00:00:00+01:00', 'output_power': 2350610.791859267, 'wind_speed': 5.326969999999998,
             'temperature': 267.6, 'pressure': 98405.7}
     prediction = predictor.predict(data)
     if prediction < data['output_power']*0.8:

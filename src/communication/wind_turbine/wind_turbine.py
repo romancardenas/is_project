@@ -15,11 +15,16 @@ class WindTurbine(threading.Thread):
         self.broker_uri = broker_uri
         self.id = id
         self.status = 'active'
-        self.data = {'status': self.status, 'tick': 0}
+        self.data = {'status': self.status,
+                     'time': '2010-01-01 00:00:00+01:00',
+                     'output_power': 2350610.791859267,
+                     'wind_speed': 5.326969999999998,
+                     'temperature': 267.6,
+                     'pressure': 98405.7}
         print('Wind turbine {0} thread ready'.format(id))
 
     def get_data(self):
-        self.data['tick'] = (self.data['tick'] + 1)
+        self.data['output_power'] += 100000
 
     async def ready(self):
         await self.client.connect(self.broker_uri)
@@ -58,5 +63,5 @@ class WindTurbine(threading.Thread):
 if __name__ == '__main__':
     assert len(sys.argv) >= 3, "Must supply only 2 arguments.\n" + "Usage: wind_turbine.py id port"
     scriptname, id, port, *arguments = sys.argv
-    wind_turbine = WindTurbine('mqtt://localhost:{0}'.format(port), id)
+    wind_turbine = WindTurbine('mqtt://localhost:{0}'.format(port), id, None)
     wind_turbine.start()

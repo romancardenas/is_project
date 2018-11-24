@@ -24,11 +24,11 @@ class MQTTAgent(threading.Thread):
         value = data['output_power']
         # TODO Substitute this silly comparison with a rule-based system
         if prediction < value * 0.8:
-            print("TOO LOW")
-            state = 'stopped'
-        elif prediction > value * 1.2:
             print("TOO HIGH")
-            state = 'stopped'
+            state = 'stop'
+        elif prediction > value * 1.2:
+            print("TOO LOW")
+            state = 'stop'
         else:
             print("GOOD PREDICTION")
         return state
