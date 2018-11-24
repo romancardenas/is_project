@@ -23,7 +23,7 @@ def fum3(P, offset):
         return 0
 
 
-def fu_data(data, failNum=2, minFaulty=3, maxFaulty=7, minBroken=3, maxBroken=5, fum=0, maxPower=7500000, reduce=0.75, offset=10000):
+def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5, fum=0, maxPower=7500000, reduce=0.75, offset=10000):
     data0=data.copy()
     n=failNum
     m=0
@@ -67,7 +67,6 @@ def fu_data(data, failNum=2, minFaulty=3, maxFaulty=7, minBroken=3, maxBroken=5,
 def fault_detected (data, dataR, posDet, repairTime=3):
     dataF=data.copy()
     gen = (i for i,x in enumerate(dataF['output_power']) if ((i>=posDet)&(i<posDet+24*repairTime)))
-    a=0
     for i in gen:
         dataF.iloc[i, dataF.columns.get_loc('output_power')] = 0;
         dataF.iloc[i, dataF.columns.get_loc('state')] = 'r'
@@ -82,5 +81,11 @@ def fault_detected (data, dataR, posDet, repairTime=3):
         i=i+1
     return dataF
 
-
+def server_error (data, dataR, posDet, repairTime=3):
+    dataF=data.copy()
+    gen = (i for i,x in enumerate(dataF['output_power']) if ((i>=posDet)&(i<posDet+24*repairTime)))
+    for i in gen:
+        dataF.iloc[i, dataF.columns.get_loc('output_power')] = 0;
+        dataF.iloc[i, dataF.columns.get_loc('state')] = 'r'
+    return dataF
 

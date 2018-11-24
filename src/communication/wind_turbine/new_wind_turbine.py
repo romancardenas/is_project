@@ -34,21 +34,33 @@ class WindTurbine(threading.Thread):
 
     def get_data(self):
         data = self.faulty.values[self.pointer, :]
-        pointer = self.pointer
-        self.pointer = pointer+1
-        data0={'time':data[0],
-              'power_output':data[1],
+        self.pointer += 1
+        if data[5]=='w':
+            self.status='active'
+        data0={'status': self.status,
+               'time':data[0],
+              'output_power':data[1],
               'wind_speed':data[2],
               'temperature':data[3],
               'pressure':data[4]}
-        if data[5]=='w':
-            self.status='active'
+        
         return data0
     
     def process_message(self, msg):
-        if msg == 'stop':
-            faulty_turbine.fault_detected(self.faulty, self.data, self.pointer)
-            self.status='stop'
+        if (msg == 'stop' & self.status=='active'):
+            realStatus = self.data.values[self.pointer-1,'status']
+            if realStatus == 'w':
+                print('Server commited an error, as there was no fault! But I am a good slave, so I stop...')
+                self.status='stop'
+                faulty_turbine.server_error(self.faulty, self.data, self.pointer)
+                
+            elif realStatus == 'r':
+                print('Server is such a smart guy')
+                self.status='stop'
+                
+            else:
+                faulty_turbine.fault_detected(self.faulty, self.data, self.pointer)
+                self.status='stop'
 
     async def ready(self):
         await self.client.connect(self.broker_uri)
@@ -73,7 +85,7 @@ class WindTurbine(threading.Thread):
     async def system_loop(self):
         await asyncio.sleep(1)
         await self.ready()
-        while self.pointer<=self.faulty.shape[0]:
+        while self.pointer<self.faulty.shape[0]:
             await self.publish()
             await self.listen()
             await asyncio.sleep(0.5)
