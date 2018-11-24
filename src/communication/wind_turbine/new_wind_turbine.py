@@ -1,9 +1,3 @@
-
-# coding: utf-8
-
-# In[106]:
-
-
 import asyncio
 import threading
 import json
@@ -27,7 +21,7 @@ class WindTurbine(threading.Thread):
         self.data['state'] = pd.Series('w', index=data.index)
         self.pointer = 0
         faulty = self.data.copy()
-        self.faulty = faulty_turbine.fu_data(faulty, fum=1)
+        self.faulty = faulty_turbine.fu_data(faulty, fum=1, test=1)
         print('Wind turbine {0} thread ready'.format(id))
 
     def get_data(self):
@@ -45,20 +39,20 @@ class WindTurbine(threading.Thread):
         return data0
     
     def process_message(self, msg):
-        if (msg == 'stop' and self.status=='active'):
-            realStatus = self.faulty['state'].values[self.pointer-1]
-            if realStatus == 'w':
+        if msg == 'stop' and self.status == 'active':
+            real_status = self.faulty['state'].values[self.pointer-1]
+            if real_status == 'w':
                 print('Server commited an error, as there was no fault! But I am a good slave, so I stop...')
                 self.status = 'stop'
                 self.faulty = faulty_turbine.server_error(self.faulty, self.data, self.pointer)
                 
-            elif realStatus == 'r':
+            elif real_status == 'r':
                 print("I'm afraid it's too late...")
-                self.status='stop'
+                self.status = 'stop'
             else:
                 print('Server is such a smart guy')
                 self.faulty = faulty_turbine.fault_detected(self.faulty, self.data, self.pointer)
-                self.status='stop'
+                self.status = 'stop'
 
     async def ready(self):
         await self.client.connect(self.broker_uri)
@@ -83,7 +77,7 @@ class WindTurbine(threading.Thread):
     async def system_loop(self):
         await asyncio.sleep(1)
         await self.ready()
-        while self.pointer<self.faulty.shape[0]:
+        while self.pointer < self.faulty.shape[0]:
             await self.publish()
             await self.listen()
             await asyncio.sleep(0.5)
