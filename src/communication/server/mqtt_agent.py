@@ -16,6 +16,7 @@ class MQTTAgent(threading.Thread):
         self.broker_uri = broker_uri
         self.system_info = dict()
         self.predictor = Predictor()
+        self.counter = 0
         print('MQTT thread ready.')
 
     def data_analysis(self, data):
@@ -23,14 +24,17 @@ class MQTTAgent(threading.Thread):
         prediction = self.predictor.predict(data)
         value = data['output_power']
         # TODO Substitute this silly comparison with a rule-based system
-        if prediction < value * 0.8:
+        if prediction < value * 0.6:
             print("TOO HIGH")
-            state = 'stop'
-        elif prediction > value * 1.2:
+            self.counter += 1
+        elif prediction > value * 1.4:
+            self.counter += 1
             print("TOO LOW")
-            state = 'stop'
         else:
+            self.counter = 0
             print("GOOD PREDICTION")
+        if self.counter > 5:
+            state = 'stop'
         return state
 
     def get_data(self):
@@ -43,7 +47,7 @@ class MQTTAgent(threading.Thread):
     async def listen(self):
         message = await self.client.deliver_message()
         rcvd_data = json.loads(message.publish_packet.payload.data.decode())
-        print('RECEIVED DATA: {0}'.format(str(rcvd_data)))
+        #print('RECEIVED DATA: {0}'.format(str(rcvd_data)))
         self.system_info.update(rcvd_data)
         status = self.data_analysis(list(rcvd_data.values())[0])
         if status is not None:

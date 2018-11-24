@@ -16,7 +16,6 @@ class SystemServer:
 
     def loop(self):
         while True:
-            print("Refresh!")
             new_data = self.mqtt_agent.get_data()
             self.rpc_server.refresh_info(new_data)
             time.sleep(5)

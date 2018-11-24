@@ -1,11 +1,3 @@
-
-# coding: utf-8
-
-# In[63]:
-
-
-import os
-import numpy as np
 import pandas as pd
 from random import randint
 pd.options.display.max_rows = None
@@ -14,8 +6,12 @@ pd.options.display.max_rows = None
 
 def fum1(maxPower):
     return randint(0,maxPower)
+
+
 def fum2(P, reduce):
     return P*reduce
+
+
 def fum3(P, offset):
     if(P>offset):
         return P-offset
@@ -60,9 +56,7 @@ def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5,
             elif ((i>=brokenStart)&(i<brokenEnd)):
                 data0.iloc[i, data0.columns.get_loc('output_power')] = 0
                 data0.iloc[i, data0.columns.get_loc('state')] = 'r'
-    return data0
-        
-        
+        return data0
     while n>0:
         n=n-1
         faultyStart=randint(300+m*s,len(data0)-s*n-300)
@@ -102,11 +96,11 @@ def fault_detected (data, dataR, posDet, repairTime=3):
     dataF=data.copy()
     gen = (i for i,x in enumerate(dataF['output_power']) if ((i>=posDet)&(i<posDet+24*repairTime)))
     for i in gen:
-        dataF.iloc[i, dataF.columns.get_loc('output_power')] = 0;
+        dataF.iloc[i, dataF.columns.get_loc('output_power')] = 0
         dataF.iloc[i, dataF.columns.get_loc('state')] = 'r'
     i=0
     for s in dataF['state']:
-        if (i>=posDet+repairTime*24):
+        if i >= posDet + repairTime * 24:
             if s != 'w':
                 dataF.iloc[i, dataF.columns.get_loc('output_power')] = dataR.iloc[i, dataR.columns.get_loc('output_power')]
                 dataF.iloc[i, dataF.columns.get_loc('state')] = 'w'
@@ -115,6 +109,7 @@ def fault_detected (data, dataR, posDet, repairTime=3):
         i=i+1
     return dataF
 
+
 def server_error (data, dataR, posDet, repairTime=3):
     dataF=data.copy()
     gen = (i for i,x in enumerate(dataF['output_power']) if ((i>=posDet)&(i<posDet+24*repairTime)))
@@ -122,4 +117,3 @@ def server_error (data, dataR, posDet, repairTime=3):
         dataF.iloc[i, dataF.columns.get_loc('output_power')] = 0;
         dataF.iloc[i, dataF.columns.get_loc('state')] = 'r'
     return dataF
-
