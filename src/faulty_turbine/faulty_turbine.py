@@ -60,7 +60,7 @@ def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5,
             elif ((i>=brokenStart)&(i<brokenEnd)):
                 data0.iloc[i, data0.columns.get_loc('output_power')] = 0
                 data0.iloc[i, data0.columns.get_loc('state')] = 'r'
-    return data0
+        return data0
         
         
     while n>0:
