@@ -1,5 +1,6 @@
 import time
 import sys
+sys.path.insert(0, '../')
 from src.communication.server.mqtt_agent import MQTTAgent
 from src.communication.server.rpc import RPCServer
 

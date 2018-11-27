@@ -1,11 +1,12 @@
 import asyncio
 import threading
 import json
+import sys
+sys.path.insert(0, '../')
+import pandas as pd
 from hbmqtt.client import MQTTClient
 from hbmqtt.mqtt.constants import QOS_1
 from src.faulty_turbine import faulty_turbine
-import pandas as pd
-import sys
 
 
 class WindTurbine(threading.Thread):
@@ -27,14 +28,14 @@ class WindTurbine(threading.Thread):
     def get_data(self):
         data = self.faulty.values[self.pointer, :]
         self.pointer += 1
-        if data[5]=='w':
-            self.status='active'
-        data0={'status': self.status,
-               'time':data[0],
-              'output_power':data[1],
-              'wind_speed':data[2],
-              'temperature':data[3],
-              'pressure':data[4]}
+        if data[5] == 'w':
+            self.status = 'active'
+        data0 = {'status': self.status,
+                 'time': data[0],
+                 'output_power': data[1],
+                 'wind_speed': data[2],
+                 'temperature': data[3],
+                 'pressure': data[4]}
         
         return data0
     
@@ -90,7 +91,6 @@ if __name__ == '__main__':
 
     assert len(sys.argv) >= 3, "Must supply only 2 arguments.\n" + "Usage: wind_turbine.py id port"
     scriptname, id, port, *arguments = sys.argv
-    df = pd.read_csv('data/data_simulation.csv')
+    df = pd.read_csv('../data/data_simulation.csv')
     wind_turbine = WindTurbine('mqtt://localhost:{0}'.format(port), id, df)
     wind_turbine.start()
-
