@@ -115,3 +115,19 @@ def server_error (data, dataR, posDet, repairTime=3):
         dataF.iloc[i, dataF.columns.get_loc('output_power')] = 0;
         dataF.iloc[i, dataF.columns.get_loc('state')] = 'r'
     return dataF
+
+def calculate_efficiency (data):
+    wasWorking=0
+    wasFaulty=0
+    wasBroken=0
+    for p in data['state']:
+        if p == 'w': 
+            wasWorking +=1
+        if p == 'f': 
+            wasFaulty +=1
+        if p == 'r': 
+            wasBroken +=1
+    d={'working':wasWorking,
+       'faulty':wasFaulty,
+       'broken':wasBroken}
+    return d

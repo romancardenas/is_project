@@ -1,9 +1,3 @@
-
-# coding: utf-8
-
-# In[106]:
-
-
 import asyncio
 import threading
 import json
@@ -28,6 +22,8 @@ class WindTurbine(threading.Thread):
         self.pointer = 0
         faulty = self.data.copy()
         self.faulty = faulty_turbine.fu_data(faulty, fum=1)
+        self.beforeEff=faulty_turbine.calculate_efficiency(self.faulty)
+        self.afterEff={}
         print('Wind turbine {0} thread ready'.format(id))
 
     def get_data(self):
@@ -86,6 +82,8 @@ class WindTurbine(threading.Thread):
         while self.pointer<self.faulty.shape[0]:
             await self.publish()
             await self.listen()
+            if self.pointer==self.faulty.shape[0]:
+                self.afterEff=faulty_turbine.calculate_efficiency(self.faulty)
             await asyncio.sleep(0.5)
 
     def run(self):
