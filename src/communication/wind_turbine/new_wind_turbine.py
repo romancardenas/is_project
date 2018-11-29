@@ -9,7 +9,6 @@ from src.faulty_turbine import faulty_turbine
 import pandas as pd
 
 
-
 class WindTurbine(threading.Thread):
     def __init__(self, broker_uri, id, data):
         super(WindTurbine, self).__init__(name='Wind turbine {0}'.format(id))
@@ -86,9 +85,11 @@ class WindTurbine(threading.Thread):
             await self.listen()
             if self.pointer==self.faulty.shape[0]:
                 self.afterEff=faulty_turbine.calculate_efficiency(self.faulty)
-                print('I could have worked for '+self.beforeEff['worked']+', be faulty for '+self.beforeEff['faulty']+' and be being repaired for '+self.beforeEff['broken']+',')
-                print('But instead I worked for '+self.beforeEff['worked']+', was faulty for '+self.beforeEff['faulty']+' and was being repaired for '+self.beforeEff['broken']+'.')
             await asyncio.sleep(0.5)
+        print('I could have worked for ' + self.beforeEff['working'] + ', be faulty for ' + self.beforeEff[
+                'faulty'] + ' and be being repaired for ' + self.beforeEff['broken'] + ',')
+        print('But instead I worked for ' + self.beforeEff['working'] + ', was faulty for ' + self.beforeEff[
+                'faulty'] + ' and was being repaired for ' + self.beforeEff['broken'] + '.')
 
     def run(self):
         self.loop.run_until_complete(self.system_loop())
@@ -98,7 +99,7 @@ if __name__ == '__main__':
 
     assert len(sys.argv) >= 3, "Must supply only 2 arguments.\n" + "Usage: wind_turbine.py id port"
     scriptname, id, port, *arguments = sys.argv
-    root = ''
+    #root = ''
     root = '../'
     df = pd.read_csv(root + 'data/data_simulation.csv')
     wind_turbine = WindTurbine('mqtt://localhost:{0}'.format(port), id, df)
