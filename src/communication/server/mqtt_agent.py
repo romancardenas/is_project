@@ -5,7 +5,7 @@ import sys
 from hbmqtt.client import MQTTClient
 from hbmqtt.mqtt.constants import QOS_1
 from src.communication.server.predictor import Predictor
-from src.Rule_base import Detection, counting_function, Input, Output, State
+from src.rule_base.Rule_base import Detection, counting_function, Input, Output, State
 from pyknow import *
 
 
@@ -18,7 +18,7 @@ class MQTTAgent(threading.Thread):
         self.broker_uri = broker_uri
         self.system_info = dict()
         self.predictor = Predictor()
-        self.detector = Detection()
+        self.detector = Detection(n_count=10)
         self.counter = 0
         self.input_dict = {}
         self.cnt = 0
@@ -28,7 +28,7 @@ class MQTTAgent(threading.Thread):
         state = 'active'
         vals = list(rcvd_data.values())[0]
         prediction = self.predictor.predict(vals)
-        inputs = counting_function(rcvd_data,self.input_dict,self.cnt, prediction)
+        inputs = counting_function(rcvd_data, self.input_dict, self.cnt, prediction)
         for key in inputs.keys():
             wt_id = key
         input_data = {'WT_id' : wt_id,
@@ -42,8 +42,8 @@ class MQTTAgent(threading.Thread):
         self.detector.declare(Input(**input_data)) 
         self.detector.returnv={}
         self.detector.run()
-        output_status.update([(key, wt.returnv[key]) for key in wt.returnv.keys()])
-        self.cnt = Wind_turbine_status['counter']
+        output_status.update([(key, self.detector.returnv[key]) for key in self.detector.returnv.keys()])
+        self.cnt = output_status['counter']
         state = output_status['status_out']
         
         return state

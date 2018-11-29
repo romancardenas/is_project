@@ -1,17 +1,7 @@
 from pyknow import *
-# Run this once
-prediction = 10.0 # For testing
-input_dict = {} #Create a empty dict - Run Once
 exsisting_wt_id = [] # Create an empty list to store the Windturbine ID's - Run Once
-cnt = False
-
-RECEIVED_DATA = {'wind_turbine_2': {'status': 'active',
-                                    'time': '2010-01-01 00:00:00+01:00',
-                                    'output_power': 20.0,
-                                    'wind_speed': 5.326969999999998,
-                                    'temperature': 267.6,
-                                    'pressure': 98405.7}}
-
+N_COUNTS = 10
+# TODO change this
 
 
 def counting_function(RECEIVED_DATA,input_dict,cnt,prediction):
@@ -50,46 +40,33 @@ def counting_function(RECEIVED_DATA,input_dict,cnt,prediction):
                                'counter' : 0}
         return input_dict
 
-# TODO: Tune margins when power_output increase.
-
-inputs = counting_function(RECEIVED_DATA,input_dict,cnt,prediction)
-
-for key in inputs.keys():
-    wt_id = key
-#This is the input for the rules
-input_data = {'WT_id' : wt_id,
-              'output_power' : inputs[wt_id]['output_power'],
-              'prediction' : inputs[wt_id]['prediction'],
-              'status' : inputs[wt_id]['status'],
-              'counter' : inputs[wt_id]['counter']
-             }
-
-
-output_status = {'WT_id' : 0,  'status_out' : '', 'counter' : False}
-
 
 class Input(Fact):
     pass
+
 
 class Output(Fact):
     def retrieve(self):
         return self.as_dict()
 
+
 class State(Fact):
     pass
 
+
 class Detection(KnowledgeEngine):
 
-    def __init__(self):
+    def __init__(self, n_count):
         super().__init__()
         self.returnv={}
+        N_COUNTS = n_count
 
     # Rule for detecting abnormal power production
     @Rule(Input(output_power=MATCH.out_p,
                 prediction=MATCH.pred,
                 WT_id=MATCH.ID,
                 counter=MATCH.c),
-          TEST(lambda out_p, pred, c: ( c <= 2) and ((out_p >= 1.20*pred) or (out_p <= 0.80*pred))),
+          TEST(lambda out_p, pred, c: ( c <= N_COUNTS) and ((out_p >= 1.20*pred) or (out_p <= 0.80*pred))),
           salience=5)
     def bad_state1(self):
         self.declare(State(P_prod = True))
@@ -101,7 +78,7 @@ class Detection(KnowledgeEngine):
                 prediction=MATCH.pred,
                 WT_id=MATCH.ID,
                 counter=MATCH.c),
-          TEST(lambda out_p, pred, c: ( c > 2) and ((out_p >= 1.20*pred) or (out_p <= 0.80*pred))),
+          TEST(lambda out_p, pred, c: ( c > N_COUNTS) and ((out_p >= 1.20*pred) or (out_p <= 0.80*pred))),
           salience=5)
     def bad_state2(self):
         self.declare(State(P_prod = False))
@@ -120,12 +97,12 @@ class Detection(KnowledgeEngine):
     # Rule for checking if wind turbine has been shut down for repair.   
     @Rule(AS.f << Input(output_power=MATCH.out_p,
                   WT_id=MATCH.ID,
-                  status="inactive"),
+                  status="stop"),
           TEST(lambda out_p: out_p == 0.0),
           salience=5)
     def wt_repair(self,ID,f):
         self.retract(f)
-        self.declare(Output(WT_id = ID, status_out="inactive"))
+        self.declare(Output(WT_id = ID, status_out="stop"))
         print("Wind turbine "+str(ID)+" has been shut down for repair.")
 
     # Rule for changing state of the wind turbine to inactive.
@@ -133,7 +110,7 @@ class Detection(KnowledgeEngine):
           State(P_prod=False),
           salience=3)
     def change_state1(self,ID):
-        self.declare(Output(WT_id = ID, status_out="inactive"))
+        self.declare(Output(WT_id = ID, status_out="stop"))
         print("Wind turbine "+str(ID)+" is inactive.")
 
     # Rule for changing state of the wind turbine to active.
@@ -152,21 +129,3 @@ class Detection(KnowledgeEngine):
 
     def get_return(self,key):
         return self.returnv.get(key)
-
-
-
-wt = Detection()
-wt.reset()
-wt.declare(Input(**input_data)) 
-wt.returnv={}
-wt.run()
-
-
-output_status.update([(key, wt.returnv[key]) for key in wt.returnv.keys()])
-Wind_turbine_status = output_status
-
-cnt = Wind_turbine_status['counter']
-print(Wind_turbine_status)
-print(input_data)
-
-
