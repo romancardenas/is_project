@@ -84,6 +84,8 @@ class WindTurbine(threading.Thread):
             await self.listen()
             if self.pointer==self.faulty.shape[0]:
                 self.afterEff=faulty_turbine.calculate_efficiency(self.faulty)
+                print('I could have worked for '+self.beforeEff['worked']+', be faulty for '+self.beforeEff['faulty']+' and be being repaired for '+self.beforeEff['broken']+',')
+                print('But instead I worked for '+self.beforeEff['worked']+', was faulty for '+self.beforeEff['faulty']+' and was being repaired for '+self.beforeEff['broken']+'.')
             await asyncio.sleep(0.5)
 
     def run(self):
