@@ -5,6 +5,8 @@ import sys
 from hbmqtt.client import MQTTClient
 from hbmqtt.mqtt.constants import QOS_1
 from src.communication.server.predictor import Predictor
+from src.Rule_base import Detection, counting_function, Input, Output, State
+from pyknow import *
 
 
 class MQTTAgent(threading.Thread):
@@ -16,25 +18,34 @@ class MQTTAgent(threading.Thread):
         self.broker_uri = broker_uri
         self.system_info = dict()
         self.predictor = Predictor()
+        self.detector = Detection()
         self.counter = 0
+        self.input_dict = {}
+        self.cnt = 0
         print('MQTT thread ready.')
 
-    def data_analysis(self, data):
+    def data_analysis(self, rcvd_data):
         state = 'active'
-        prediction = self.predictor.predict(data)
-        value = data['output_power']
-        # TODO Substitute this silly comparison with a rule-based system
-        if prediction < value * 0.6:
-            print("TOO HIGH")
-            self.counter += 1
-        elif prediction > value * 1.4:
-            self.counter += 1
-            print("TOO LOW")
-        else:
-            self.counter = 0
-            print("GOOD PREDICTION")
-        if self.counter > 5:
-            state = 'stop'
+        vals = list(rcvd_data.values())[0]
+        prediction = self.predictor.predict(vals)
+        inputs = counting_function(rcvd_data,self.input_dict,self.cnt, prediction)
+        for key in inputs.keys():
+            wt_id = key
+        input_data = {'WT_id' : wt_id,
+              'output_power' : inputs[wt_id]['output_power'],
+              'prediction' : inputs[wt_id]['prediction'],
+              'status' : inputs[wt_id]['status'],
+              'counter' : inputs[wt_id]['counter']
+             }
+        output_status = {'WT_id' : 0,  'status_out' : '', 'counter' : False}
+        self.detector.reset()
+        self.detector.declare(Input(**input_data)) 
+        self.detector.returnv={}
+        self.detector.run()
+        output_status.update([(key, wt.returnv[key]) for key in wt.returnv.keys()])
+        self.cnt = Wind_turbine_status['counter']
+        state = output_status['status_out']
+        
         return state
 
     def get_data(self):
@@ -49,7 +60,7 @@ class MQTTAgent(threading.Thread):
         rcvd_data = json.loads(message.publish_packet.payload.data.decode())
         #print('RECEIVED DATA: {0}'.format(str(rcvd_data)))
         self.system_info.update(rcvd_data)
-        status = self.data_analysis(list(rcvd_data.values())[0])
+        status = self.data_analysis(rcvd_data)
         if status is not None:
             await self.publish(list(rcvd_data.keys())[0], status)
 
