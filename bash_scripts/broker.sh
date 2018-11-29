@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python ../src/communication/broker/broker.py
+python3 ../src/communication/broker/broker.py
