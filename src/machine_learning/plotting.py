@@ -1,8 +1,15 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
 
 from keras.models import model_from_json
 from keras import optimizers
+
+sns.set()
+colors = ["silver", "amber", "dark turquoise", "faded green", "dusty purple"]
+sns.set_palette(sns.xkcd_palette(colors))
 
 json_file = open('data/ann_model.json', 'r')
 loaded_model_json = json_file.read()
@@ -26,22 +33,32 @@ y = data.values[:, [0]]
 X = data.values[:, 1:]
 X = (X - mean) / std
 prediction = model.predict(X)
-y_l = y - 1e5
-y_m = y + 1e5
-y_l = y_l.sort(axis=0)
-y_m = y_m.sort(axis=0)
-y_more = y_m.copy()
-y_less = y_l.copy()
-y_less[y_l[:, 0] < 2e6] = y_l[:, 0] * 0.8
+
+y_s = y.copy()
+y_s.sort(axis=0)
+y_l = y_s - 1e5
+y_m = y_s + 1e5
+y_more = y_s.copy()
+y_less = y_s.copy()
+
+y_more = y_more *1.15
+y_less[y_l[:, 0] < 6.8e6] = y_l[y_l[:, 0] < 6.8e6] - 0.6e6
+
+y_less[y_l[:, 0] < 5.6e6] = y_l[y_l[:, 0] < 5.6e6] * 0.85
+y_more[y_m[:, 0] < 7e6] = y_m[y_m[:, 0] < 7e6] * 1.1
+
+y_less[y_l[:, 0] < 2.3e6] = y_l[y_l[:, 0] < 2.3e6] * 0.8
+y_more[y_m[:, 0] < 4e6] = y_m[y_m[:, 0] < 4e6] * 1.2
+
 # Plot final model performance
 plt.figure(figsize=(12, 9))
-plt.title('train values vs prediction')
-plt.xlabel('actual power')
-plt.ylabel('predicted power')
+plt.title('Train Values vs Prediction', fontsize=20)
+plt.xlabel('Actual Power (Watts)', fontsize=15)
+plt.ylabel('Predicted Power (Watts)', fontsize=15)
 plt.ticklabel_format(style='plain')
 plt.plot(y, prediction, '.')
-plt.plot(y, y)
-plt.plot(y, y_less*0.8)
-plt.plot(y, y_more*1.2)
-#plt.legend(['predictions', 'ideal'])
+plt.plot(y, y, linewidth=2)
+plt.plot(y_s, y_less, '--', linewidth=2)
+plt.plot(y_s, y_more, '--',  linewidth=2)
+plt.legend(['Predictions', 'Linear', 'Lower Limit', 'Upper Limit'], fontsize=15)
 plt.show()
