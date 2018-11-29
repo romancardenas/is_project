@@ -83,13 +83,14 @@ class WindTurbine(threading.Thread):
         while self.pointer<self.faulty.shape[0]:
             await self.publish()
             await self.listen()
-            if self.pointer==self.faulty.shape[0]:
-                self.afterEff=faulty_turbine.calculate_efficiency(self.faulty)
             await asyncio.sleep(0.5)
-        print('I could have worked for ' + self.beforeEff['working'] + ', be faulty for ' + self.beforeEff[
-                'faulty'] + ' and be being repaired for ' + self.beforeEff['broken'] + ',')
-        print('But instead I worked for ' + self.beforeEff['working'] + ', was faulty for ' + self.beforeEff[
-                'faulty'] + ' and was being repaired for ' + self.beforeEff['broken'] + '.')
+        self.afterEff = faulty_turbine.calculate_efficiency(self.faulty)
+        print('I could have worked for {0}, be faulty for {1} and be being repaired for {2}.'.format(self.beforeEff['working'],
+                                                                                                     self.beforeEff['faulty'],
+                                                                                                     self.beforeEff['broken']))
+        print('But instead I worked for {0}, be faulty for {1} and be being repaired for {2}.'.format(self.afterEff['working'],
+                                                                                                      self.afterEff['faulty'],
+                                                                                                      self.afterEff['broken']))
 
     def run(self):
         self.loop.run_until_complete(self.system_loop())
