@@ -23,7 +23,7 @@ class WindTurbine(threading.Thread):
         self.data['state'] = pd.Series('w', index=data.index)
         self.pointer = 0
         faulty = self.data.copy()
-        self.faulty = faulty_turbine.fu_data(faulty, fum=1)
+        self.faulty = faulty_turbine.fu_data(faulty, fum=1, test=1)
         self.beforeEff=faulty_turbine.calculate_efficiency(self.faulty)
         self.afterEff={}
         print('Wind turbine {0} thread ready'.format(id))
