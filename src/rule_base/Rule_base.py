@@ -1,44 +1,7 @@
 from pyknow import *
-exsisting_wt_id = [] # Create an empty list to store the Windturbine ID's - Run Once
+
 N_COUNTS = 10
 # TODO change this
-
-
-def counting_function(RECEIVED_DATA,input_dict,cnt,prediction):
-    wind_turbine_id = ''        
-    
-    # Getting the key from the data received.
-    for key in RECEIVED_DATA.keys():
-        wind_turbine_id = key
-    
-    init_ID = [int(s) for s in wind_turbine_id.split('_') if s.isdigit()]
-    ID_index = int(init_ID[0])
-    
-    # Checking if there already is an dict of this ID, if there is,
-    # Updating output_power, prediction and status.
-    if wind_turbine_id in exsisting_wt_id:
-        if cnt == True:
-            input_dict[ID_index]['output_power'] = RECEIVED_DATA[wind_turbine_id]['output_power']
-            input_dict[ID_index]['prediction']  = prediction
-            input_dict[ID_index]['status'] = RECEIVED_DATA[wind_turbine_id]['status']
-            input_dict[ID_index]['counter'] = input_dict[ID_index]['counter'] + 1
-            cnt = False
-            return input_dict
-        
-        elif cnt == False:
-            input_dict[ID_index]['output_power'] = RECEIVED_DATA[wind_turbine_id]['output_power']
-            input_dict[ID_index]['prediction']  = prediction
-            input_dict[ID_index]['status'] = RECEIVED_DATA[wind_turbine_id]['status']
-            input_dict[ID_index]['counter'] = 0
-            return input_dict
-        
-    elif wind_turbine_id not in exsisting_wt_id:
-        exsisting_wt_id.append(wind_turbine_id)
-        input_dict[ID_index] = {'output_power': RECEIVED_DATA[wind_turbine_id]['output_power'],
-                               'prediction': prediction,
-                               'status' : RECEIVED_DATA[wind_turbine_id]['status'],
-                               'counter' : 0}
-        return input_dict
 
 
 class Input(Fact):
