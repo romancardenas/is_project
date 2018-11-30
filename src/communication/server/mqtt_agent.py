@@ -18,35 +18,14 @@ class MQTTAgent(threading.Thread):
         self.system_info = dict()
         self.predictor = Predictor()
         self.detector = Detection(n_count=10)
-        self.input_dict = {}
-        self.cnt = dict()
         print('MQTT thread ready.')
 
     def data_analysis(self, rcvd_data):
-        vals = list(rcvd_data.values())[0]
-        prediction = self.predictor.predict(vals)
-
-        id = list(rcvd_data.keys())[0]
-        if id not in list(self.cnt.keys()):
-            self.cnt[id] = 0
-        input_data = vals.copy()
-        input_data['WT_id'] = id
-        input_data['counter'] = self.cnt[id]
-        input_data['prediction'] = prediction
-
-        output_status = {'WT_id' : 0,  'status_out' : '', 'counter' : False}
-        self.detector.reset()
-        self.detector.declare(Input(**input_data)) 
-        self.detector.returnv = {}
-        self.detector.run()
-        output_status.update([(key, self.detector.returnv[key]) for key in self.detector.returnv.keys()])
-
-        if output_status['counter']:
-            self.cnt[id] += 1
-        else:
-            self.cnt[id] = 0
-        state = output_status['status_out']
-        return state
+        idn = list(rcvd_data.keys())[0]  # From received data, we get the ID
+        vals = list(rcvd_data.values())[0]  # From received data, we get the data
+        prediction = self.predictor.predict(vals)  # From data, we obtain a prediction
+        evaluation = self.detector.evaluate(idn, vals, prediction)  # Finally, the RBS makes a decision
+        return evaluation
 
     def get_data(self):
         return self.system_info

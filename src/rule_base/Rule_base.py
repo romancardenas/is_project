@@ -1,7 +1,12 @@
 from pyknow import *
 
-N_COUNTS = 10
-# TODO change this
+
+class Counter(Fact):
+    pass
+
+
+class Result(Fact):
+    pass
 
 
 class Input(Fact):
@@ -18,202 +23,295 @@ class State(Fact):
 
 
 class Detection(KnowledgeEngine):
-
     def __init__(self, n_count):
         super().__init__()
-        self.returnv={}
-        N_COUNTS = n_count
+        self.returnv = dict()
+        self.cnt = dict()
+        self.N_COUNTS = n_count
+        self.reset()
+
+    def evaluate(self, idn, data, prediction):
+        i = 0
+        if idn not in list(self.cnt.keys()):
+            i = 1
+            self.cnt[idn] = 0
+        input_data = data.copy()
+        input_data['WT_id'] = idn  # we add to data the ID
+        input_data['prediction'] = prediction  # we add to data the prediction
+
+        counter_data = dict()
+        counter_data['WT_id'] = idn  # we add to data the ID
+        counter_data['counter'] = self.cnt[idn]  # we add to data the counter
+        counter_data['maxim'] = self.N_COUNTS  # we add to data the counter
+        if i:
+            self.declare(Counter(**counter_data))
+        self.declare(Input(**input_data))
+        self.returnv = dict()
+        self.run()
+        self.cnt[idn] = self.returnv['counter']
+        return self.returnv['response']
 
     # Folling rules sets the upper and lower limits, depening on what the power output is.
-    @Rule(Input(output_power=MATCH.out_p),
+    @Rule(Input(status='active',
+                WT_id=MATCH.ID,
+                output_power=MATCH.out_p),
           TEST(lambda out_p: out_p <= 2300000),
           salience=7)
-    def set_limit1(self):
-        self.declare(State(flag="L_1"))
-            
-    @Rule(Input(output_power=MATCH.out_p),
+    def set_limit1(self, ID):
+        self.declare(State(WT_id=ID, flag="L_1"))
+
+    @Rule(Input(status='active',
+                WT_id=MATCH.ID,
+                output_power=MATCH.out_p),
           TEST(lambda out_p: (4000000 >= out_p > 2300000)),
           salience=7)
-    def set_limit2(self):
-        self.declare(State(flag="L_2"))
-            
-    @Rule(Input(output_power=MATCH.out_p),
+    def set_limit2(self, ID):
+        self.declare(State(WT_id=ID, flag="L_2"))
+
+    @Rule(Input(status='active',
+                WT_id=MATCH.ID,
+                output_power=MATCH.out_p),
           TEST(lambda out_p: (5600000 >= out_p > 4000000)),
           salience=7)
-    def set_limit3(self):
-        self.declare(State(flag="L_3"))
-         
-    @Rule(Input(output_power=MATCH.out_p),
+    def set_limit3(self, ID):
+        self.declare(State(WT_id=ID, flag="L_3"))
+
+    @Rule(Input(status='active',
+                WT_id=MATCH.ID,
+                output_power=MATCH.out_p),
           TEST(lambda out_p: (7000000 >= out_p > 5600000)),
           salience=7)
-    def set_limit4(self):
-        self.declare(State(flag="L_4"))
+    def set_limit4(self, ID):
+        self.declare(State(WT_id=ID, flag="L_4"))
 
-            
-    @Rule(Input(output_power=MATCH.out_p),
+    @Rule(Input(status='active',
+                WT_id=MATCH.ID,
+                output_power=MATCH.out_p),
           TEST(lambda out_p: (out_p > 7000000)),
           salience=7)
-    def set_limit5(self):
-        self.declare(State(flag="L_5"))
+    def set_limit5(self, ID):
+        self.declare(State(WT_id=ID, flag="L_5"))
+
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_1"),
+          TEST(lambda out_p, pred: (out_p >= 1.2 * pred) or (out_p < 0.8 * pred)),
+          salience=5)
+    def bad_state_1(self, c, f, i, s, ID):
+        print("Abnormal production1! {}".format(c+1))
+        c += 1
+        self.modify(f, counter=c)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
+
+    # Rule for detecting abnormal power production
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_2"),
+          TEST(lambda out_p, pred: (out_p >= 1.2 * pred) or (out_p < 0.85 * pred)),
+          salience=5)
+    def bad_state_2(self, c, f, i, s, ID):
+        print("Abnormal production2 {}".format(c+1))
+        c += 1
+        self.modify(f, counter=c)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
 
         # Rule for detecting abnormal power production
-    @Rule(Input(output_power=MATCH.out_p,
-                prediction=MATCH.pred,
-                WT_id=MATCH.ID,
-                counter=MATCH.c),
-          State(flag="L_1"),
-          TEST(lambda out_p, pred, c: ( c <= N_COUNTS) and ((out_p >= 1.20*pred) or (out_p <= 0.8*pred))),
+
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_3"),
+          TEST(lambda out_p, pred: (out_p >= 1.1 * pred) or (out_p < 0.85 * pred)),
           salience=5)
-    def bad_state_1(self):
-        self.declare(State(P_prod = True))
-        self.declare(Output(counter=True))
-        print("Abnormal production1!")
-            
+    def bad_state_3(self, c, f, i, s, ID):
+        print("Abnormal production3! {}".format(c+1))
+        c += 1
+        self.modify(f, counter=c)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
+
         # Rule for detecting abnormal power production
-    @Rule(Input(output_power=MATCH.out_p,
-                prediction=MATCH.pred,
-                WT_id=MATCH.ID,
-                counter=MATCH.c),
-          State(flag="L_2"),
-          TEST(lambda out_p, pred, c: ( c <= N_COUNTS) and ((out_p >= 1.2*pred) or (out_p <= 0.85*pred))),
+
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_4"),
+          TEST(lambda out_p, pred: out_p >= 1.1 * pred),
           salience=5)
-    def bad_state_2(self):
-        self.declare(State(P_prod = True))
-        self.declare(Output(counter=True))
-        print("Abnormal production2!")
-            
-        # Rule for detecting abnormal power production
-    @Rule(Input(output_power=MATCH.out_p,
-                prediction=MATCH.pred,
-                WT_id=MATCH.ID,
-                counter=MATCH.c),
-          State(flag="L_3"),
-          TEST(lambda out_p, pred, c: ( c <= N_COUNTS) and ((out_p >= 1.1*pred) or (out_p <= 0.85*pred))),
+    def bad_state_4(self, c, f, i, s, ID):
+        print("Abnormal production4! {}".format(c+1))
+        c += 1
+        self.modify(f, counter=c)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
+
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_5"),
+          TEST(lambda out_p, pred: out_p >= 1.15 * pred),  # lower lim?
           salience=5)
-    def bad_state_3(self):
-        self.declare(State(P_prod = True))
-        self.declare(Output(counter=True))
-        print("Abnormal production3!")
-            
-        # Rule for detecting abnormal power production
-    @Rule(Input(output_power=MATCH.out_p,
-                prediction=MATCH.pred,
-                WT_id=MATCH.ID,
-                counter=MATCH.c),
-          State(flag="L_4"),
-          TEST(lambda out_p, pred, c: ( c <= N_COUNTS) and (out_p >= 1.1*pred)), 
+    def bad_state_5(self, c, f, i, s, ID):
+        print("Abnormal production5! {}".format(c+1))
+        c += 1
+        self.modify(f, counter=c)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
+
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_1"),
+          TEST(lambda out_p, pred: (out_p < 1.20 * pred) and (out_p > 0.8 * pred)),
           salience=5)
-    def bad_state_4(self):
-        self.declare(State(P_prod = True))
-        self.declare(Output(counter=True))
-        print("Abnormal production4!")
-            
-    @Rule(Input(output_power=MATCH.out_p,
-                prediction=MATCH.pred,
-                WT_id=MATCH.ID,
-                counter=MATCH.c),
-          State(flag="L_5"),
-          TEST(lambda out_p, pred, c: ( c <= N_COUNTS) and (out_p >= 1.15*pred)), #lower lim?
-          salience=5)
-    def bad_state_5(self):
-        self.declare(State(P_prod = True))
-        self.declare(Output(counter=True))
-        print("Abnormal production5!") 
-        
-    # Rule for detecting broken wind turbine
-    @Rule(Input(output_power=MATCH.out_p,
-                prediction=MATCH.pred,
-                WT_id=MATCH.ID,
-                counter=MATCH.c),
-          TEST(lambda out_p, pred, c: ( c > N_COUNTS) and ((out_p >= 1.20*pred) or (out_p <= 0.80*pred))),
-          salience=5)
-    def bad_state2(self):
-        self.declare(State(P_prod = False))
-        self.declare(Output(counter=True))
-        
-        # Rule for detecting normal power production
-    @Rule(Input(output_power=MATCH.out_p,
-                prediction=MATCH.pred,
-                WT_id=MATCH.ID),
-          State(flag="L_1"),
-          TEST(lambda out_p, pred: (out_p <= 1.20*pred) and (out_p >= 0.80*pred)),
-          salience=5)
-    def good_state_1(self):
-        self.declare(State(P_prod = True))
+    def good_state_1(self, f, i, s, ID):
         print("Normal production1!")
-            
-    @Rule(Input(output_power=MATCH.out_p,
-                prediction=MATCH.pred,
-                WT_id=MATCH.ID),
-          State(flag="L_2"),
-          TEST(lambda out_p, pred: (out_p <= 1.20*pred) and (out_p >= 0.85*pred)),
+        self.modify(f, counter=0)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
+
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_2"),
+          TEST(lambda out_p, pred: (out_p < 1.2 * pred) and (out_p >= 0.85 * pred)),
           salience=5)
-    def good_state_2(self):
-        self.declare(State(P_prod = True))
+    def good_state_2(self, f, i, s, ID):
         print("Normal production2!")
-        
-    @Rule(Input(output_power=MATCH.out_p,
-                prediction=MATCH.pred,
-                WT_id=MATCH.ID),
-          State(flag="L_3"),
-          TEST(lambda out_p, pred: (out_p <= 1.1*pred) and (out_p >= 0.85*pred)),
+        self.modify(f, counter=0)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
+
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_3"),
+          TEST(lambda out_p, pred: (out_p < 1.1 * pred) and (out_p >= 0.85 * pred)),
           salience=5)
-    def good_state_3(self):
-        self.declare(State(P_prod = True))
+    def good_state_3(self, f, i, s, ID):
         print("Normal production3!")
-            
-    @Rule(Input(output_power=MATCH.out_p,
-                prediction=MATCH.pred,
-                WT_id=MATCH.ID),
-          State(flag="L_4"),
-          TEST(lambda out_p, pred: (out_p <= 1.1*pred)),
+        self.modify(f, counter=0)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
+
+        # Rule for detecting abnormal power production
+
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_4"),
+          TEST(lambda out_p, pred: out_p < 1.1 * pred),
+
           salience=5)
-    def good_state_4(self):
-        self.declare(State(P_prod = True))
+    def good_state_4(self, f, i, s, ID):
         print("Normal production4!")
-            
-    @Rule(Input(output_power=MATCH.out_p,
-                prediction=MATCH.pred,
-                WT_id=MATCH.ID),
-          State(flag="L_5"),
-          TEST(lambda out_p, pred: (out_p <= 1.15*pred)),
+        self.modify(f, counter=0)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
+
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_5"),
+          TEST(lambda out_p, pred: out_p < 1.15 * pred),
           salience=5)
-    def good_state_5(self):
-        self.declare(State(P_prod = True))
+    def good_state_5(self, f, i, s, ID):
         print("Normal production5!")
+        self.modify(f, counter=0)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
 
-    # Rule for checking if wind turbine has been shut down for repair.   
-    @Rule(AS.f << Input(output_power=MATCH.out_p,
-                  WT_id=MATCH.ID,
-                  status="stop"),
-          TEST(lambda out_p: out_p == 0.0),
-          salience=5)
-    def wt_repair(self,ID,f):
-        self.retract(f)
-        self.declare(Output(WT_id = ID, status_out="stop"))
-        print("Wind turbine "+str(ID)+" has been shut down for repair.")
+    @Rule(AS.i << Input(WT_id=MATCH.ID,
+                        status='stop'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          salience=2)
+    def reset_counter(self, f, ID, i):
+        self.modify(f, counter=0)
+        self.retract(i)
+        self.declare(Output(id=ID, response="stop", counter=0))
 
-    # Rule for changing state of the wind turbine to inactive.
-    @Rule(Input(WT_id=MATCH.ID),
-          State(P_prod=False),
-          salience=3)
-    def change_state1(self,ID):
-        self.declare(Output(WT_id = ID, status_out="stop"))
-        print("Wind turbine "+str(ID)+" is inactive.")
+    # If we exceed the counter -> return stop
+    @Rule(AS.r << Result(WT_id=MATCH.ID),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c,
+                          maxim=MATCH.m),
+          TEST(lambda c, m: c >= m),
+          salience=2)
+    def stop_turbine(self, ID, f, r, c):
+        self.modify(f, counter=0)
+        self.retract(r)
+        self.declare(Output(id=ID, response="stop", counter=c))
 
-    # Rule for changing state of the wind turbine to active.
-    @Rule(Input(WT_id=MATCH.ID),
-          State(P_prod=True),
-          salience=3)
-    def change_state2(self,ID):
-        self.declare(Output(WT_id = ID, status_out="active" ))
-        print("Wind turbine "+str(ID)+" is active.")
+    # If we don't exceed the counter -> return active
+    @Rule(AS.r << Result(WT_id=MATCH.ID),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c,
+                          maxim=MATCH.m),
+          TEST(lambda c, m: c < m),
+          salience=2)
+    def start_turbine(self, ID, r, c):
+        self.retract(r)
+        self.declare(Output(id=ID, response="active", counter=c))
 
-    @Rule(AS.out << Output(),              
-          salience=0)
-    def _returnstate(self,out):
+    @Rule(AS.out << Output(), salience=0)
+    def _returnstate(self, out):
         self.returnv.update(**out.retrieve())
-        #print("Status for Wind Turbine: " +str(out.retrieve()))
+        self.retract(out)
 
-    def get_return(self,key):
+    def get_return(self, key):
         return self.returnv.get(key)
