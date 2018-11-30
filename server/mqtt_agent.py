@@ -4,8 +4,8 @@ import json
 import sys
 from hbmqtt.client import MQTTClient
 from hbmqtt.mqtt.constants import QOS_1
-from src.communication.server.predictor import Predictor
-from src.rule_base.Rule_base import Detection, Input
+from predictor import Predictor
+from expert_system import ExpertSystem
 
 
 class MQTTAgent(threading.Thread):
@@ -17,14 +17,14 @@ class MQTTAgent(threading.Thread):
         self.broker_uri = broker_uri
         self.system_info = dict()
         self.predictor = Predictor()
-        self.detector = Detection(n_count=10)
+        self.expert_system = ExpertSystem(n_count=10)
         print('MQTT thread ready.')
 
     def data_analysis(self, rcvd_data):
         idn = list(rcvd_data.keys())[0]  # From received data, we get the ID
         vals = list(rcvd_data.values())[0]  # From received data, we get the data
         prediction = self.predictor.predict(vals)  # From data, we obtain a prediction
-        evaluation = self.detector.evaluate(idn, vals, prediction)  # Finally, the RBS makes a decision
+        evaluation = self.expert_system.evaluate(idn, vals, prediction)  # Finally, the RBS makes a decision
         return evaluation
 
     def get_data(self):
@@ -37,7 +37,6 @@ class MQTTAgent(threading.Thread):
     async def listen(self):
         message = await self.client.deliver_message()
         rcvd_data = json.loads(message.publish_packet.payload.data.decode())
-        #print('RECEIVED DATA: {0}'.format(str(rcvd_data)))
         self.system_info.update(rcvd_data)
         status = self.data_analysis(rcvd_data)
         if status is not None:

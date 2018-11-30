@@ -8,20 +8,18 @@ from keras import optimizers
 class Predictor:
     def __init__(self):
         # load json and create model
-        root = '../'
-        # root = ''
-        json_file = open(root + 'data/ann_model.json', 'r')
+        json_file = open('data/ann_model.json', 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
         # load weights into new model
-        loaded_model.load_weights(root + "data/ann_weights.h5")
+        loaded_model.load_weights("data/ann_weights.h5")
         adam = optimizers.Adam(lr=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.00000001)
         loaded_model.compile(loss='mean_squared_error', optimizer=adam)
         self.model = loaded_model
         self.model._make_predict_function()
         # load normalization data
-        norm_data = pd.read_csv(root + 'data/ann_normalization.csv')
+        norm_data = pd.read_csv('data/ann_normalization.csv')
         self.mean = norm_data.values[:, [0]].T
         self.std = norm_data.values[:, [1]].T
 

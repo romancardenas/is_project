@@ -22,7 +22,7 @@ class State(Fact):
     pass
 
 
-class Detection(KnowledgeEngine):
+class ExpertSystem(KnowledgeEngine):
     def __init__(self, n_count):
         super().__init__()
         self.returnv = dict()
