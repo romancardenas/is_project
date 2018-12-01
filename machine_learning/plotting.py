@@ -28,7 +28,7 @@ std = norm_data.values[:, [1]].T
 
 print("(ANN predictor) Loaded model from disk")
 
-data = pd.read_csv('data/data_training.csv', index_col=0)  # Read the CSV file
+data = pd.read_csv('../data/data_training.csv', index_col=0)  # Read the CSV file
 y = data.values[:, [0]]
 X = data.values[:, 1:]
 X = (X - mean) / std
@@ -36,8 +36,8 @@ prediction = model.predict(X)
 
 y_s = y.copy()
 y_s.sort(axis=0)
-y_l = y_s - 1e5
-y_m = y_s + 1e5
+y_l = y_s - 2e5
+y_m = y_s + 2e5
 y_more = y_s.copy()
 y_less = y_s.copy()
 
@@ -48,17 +48,17 @@ y_less[y_l[:, 0] < 5.6e6] = y_l[y_l[:, 0] < 5.6e6] * 0.85
 y_more[y_m[:, 0] < 7e6] = y_m[y_m[:, 0] < 7e6] * 1.1
 
 y_less[y_l[:, 0] < 2.3e6] = y_l[y_l[:, 0] < 2.3e6] * 0.8
-y_more[y_m[:, 0] < 4e6] = y_m[y_m[:, 0] < 4e6] * 1.2
+y_more[y_m[:, 0] < 3.5e6] = y_m[y_m[:, 0] < 3.5e6] * 1.2
 
 # Plot final model performance
-plt.figure(figsize=(12, 9))
-plt.title('Train Values vs Prediction', fontsize=20)
-plt.xlabel('Actual Power (Watts)', fontsize=15)
-plt.ylabel('Predicted Power (Watts)', fontsize=15)
+plt.figure(figsize=(24, 18))
+plt.title('Train Values vs Prediction', fontsize=40)
+plt.xlabel('Actual Power (Watts)', fontsize=30)
+plt.ylabel('Predicted Power (Watts)', fontsize=30)
 plt.ticklabel_format(style='plain')
 plt.plot(y, prediction, '.')
-plt.plot(y, y, linewidth=2)
-plt.plot(y_s, y_less, '--', linewidth=2)
-plt.plot(y_s, y_more, '--',  linewidth=2)
-plt.legend(['Predictions', 'Linear', 'Lower Limit', 'Upper Limit'], fontsize=15)
+plt.plot(y, y, linewidth=4)
+plt.plot(y_s, y_less, '--', linewidth=4)
+plt.plot(y_s, y_more, '--',  linewidth=4)
+plt.legend(['Predictions', 'Linear', 'Lower Limit', 'Upper Limit'], fontsize=30)
 plt.show()
