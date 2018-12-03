@@ -6,11 +6,11 @@ import seaborn as sns
 
 from keras.models import model_from_json
 from keras import optimizers
-
+"""
 sns.set()
 colors = ["silver", "amber", "dark turquoise", "faded green", "dusty purple"]
 sns.set_palette(sns.xkcd_palette(colors))
-
+"""
 json_file = open('../data/ann_model.json', 'r')
 loaded_model_json = json_file.read()
 json_file.close()
@@ -34,8 +34,10 @@ X = data.values[:, 1:]
 X = (X - mean) / std
 prediction = model.predict(X)
 
-y_s = y.copy()
+#y_s = y.copy()
+y_s = prediction.copy()
 y_s.sort(axis=0)
+
 y_l = y_s - 2e5
 y_m = y_s + 2e5
 y_more = y_s.copy()
@@ -51,14 +53,16 @@ y_less[y_l[:, 0] < 2.3e6] = y_l[y_l[:, 0] < 2.3e6] * 0.8
 y_more[y_m[:, 0] < 3.5e6] = y_m[y_m[:, 0] < 3.5e6] * 1.2
 
 # Plot final model performance
-plt.figure(figsize=(24, 18))
-plt.title('Train Values vs Prediction', fontsize=40)
-plt.xlabel('Actual Power (Watts)', fontsize=30)
-plt.ylabel('Predicted Power (Watts)', fontsize=30)
+#plt.figure(figsize=(24, 18))
+plt.figure()
+plt.title('Train Values vs Prediction')
+plt.ylabel('Actual Power (MWatts)')
+plt.xlabel('Predicted Power (MWatts)')
 plt.ticklabel_format(style='plain')
-plt.plot(y, prediction, '.')
-plt.plot(y, y, linewidth=4)
-plt.plot(y_s, y_less, '--', linewidth=4)
-plt.plot(y_s, y_more, '--',  linewidth=4)
-plt.legend(['Predictions', 'Linear', 'Lower Limit', 'Upper Limit'], fontsize=30)
+plt.plot(prediction/1e6, y/1e6, '.')
+plt.plot(y/1e6, y/1e6, linewidth=2)
+plt.plot(y_s/1e6, y_less/1e6, '--', linewidth=2)
+plt.plot(y_s/1e6, y_more/1e6, '--',  linewidth=2)
+#plt.legend(['Predictions', 'Linear'])
+plt.legend(['Predictions', 'Linear', 'Lower Limit', 'Upper Limit'])
 plt.show()

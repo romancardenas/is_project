@@ -27,13 +27,13 @@ for column in list(raw_data):
     plt.xticks(rotation='vertical')
     #raw_data.plot.scatter(raw_data.ix, column)
     plt.show()
-
+#%%
 for column1 in list(raw_data):
     if column1 != 'output_power':
         plt.figure(figsize=(12, 6))
-        plt.title('{0} vs output power'.format(column1))
-        plt.xlabel(column1)
-        plt.ylabel('output power')
+        plt.title('{0} vs output power'.format(column1), fontsize=20)
+        plt.xlabel(column1, fontsize=15)
+        plt.ylabel('output power', fontsize=15)
         plt.plot(raw_data[column1], raw_data['output_power'], '*')
         plt.xticks(rotation='vertical')
         # raw_data.plot.scatter(raw_data.ix, column)
@@ -52,9 +52,9 @@ for i in range(0, M):
     if pca_info[i] > 0.9:
         print('We need at least ' + str(i+1) + ' PCA components in order to preserve 90% of information.')
         break
-plt.figure(figsize=(12, 6))
+plt.figure(figsize=(8, 6))
 plt.title('PCA Analysis')
-plt.xlabel('number of PC')
-plt.ylabel('explained variance')
+plt.xlabel('number of PC', fontsize=12)
+plt.ylabel('explained variance (cumulative)',  fontsize=12)
 plt.plot(range(1, M+1), pca_info)
 plt.show()

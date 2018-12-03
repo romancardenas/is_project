@@ -100,7 +100,7 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_1"),
-          TEST(lambda out_p, pred: (out_p >= 1.2 * pred) or (out_p < 0.8 * pred)),
+          TEST(lambda out_p, pred: (out_p >= 1.2 * (pred + 2e5)) or (out_p < 0.8 * (pred - 2e5))),
           salience=5)
     def bad_state_1(self, c, f, i, s, ID):
         print("Abnormal production1! {}".format(c+1))
@@ -119,7 +119,7 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_2"),
-          TEST(lambda out_p, pred: (out_p >= 1.2 * pred) or (out_p < 0.85 * pred)),
+          TEST(lambda out_p, pred: (out_p >= 1.2 * (pred + 2e5)) or (out_p < 0.85 * (pred - 2e5))),
           salience=5)
     def bad_state_2(self, c, f, i, s, ID):
         print("Abnormal production2 {}".format(c+1))
@@ -139,7 +139,7 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_3"),
-          TEST(lambda out_p, pred: (out_p >= 1.1 * pred) or (out_p < 0.85 * pred)),
+          TEST(lambda out_p, pred: (out_p >= 1.1 * (pred + 2e5)) or (out_p < 0.85 * (pred - 2e5))),
           salience=5)
     def bad_state_3(self, c, f, i, s, ID):
         print("Abnormal production3! {}".format(c+1))
@@ -159,7 +159,7 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_4"),
-          TEST(lambda out_p, pred: out_p >= 1.1 * pred),
+          TEST(lambda out_p, pred: (out_p >= 1.1 * (pred + 2e5)) or (out_p < (pred - 8e5))),
           salience=5)
     def bad_state_4(self, c, f, i, s, ID):
         print("Abnormal production4! {}".format(c+1))
@@ -177,7 +177,7 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_5"),
-          TEST(lambda out_p, pred: out_p >= 1.15 * pred),  # lower lim?
+          TEST(lambda out_p, pred: (out_p >= 1.15 * (pred + 2e5)) or (out_p < (0.75 * pred))),
           salience=5)
     def bad_state_5(self, c, f, i, s, ID):
         print("Abnormal production5! {}".format(c+1))
@@ -195,11 +195,15 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_1"),
-          TEST(lambda out_p, pred: (out_p < 1.20 * pred) and (out_p > 0.8 * pred)),
+          TEST(lambda out_p, pred: (1.2 * (pred + 2e5)) > out_p >= (0.8 * (pred - 2e5))),
           salience=5)
-    def good_state_1(self, f, i, s, ID):
-        print("Normal production1!")
-        self.modify(f, counter=0)
+    def good_state_1(self, f, i, s, ID, c):
+        print("Normal production1! {}".format(c))
+        if c > 0:
+            c -= 1
+        else:
+            c = 0
+        self.modify(f, counter=c)
         self.retract(i)
         self.retract(s)
         self.declare(Result(WT_id=ID))
@@ -212,11 +216,15 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_2"),
-          TEST(lambda out_p, pred: (out_p < 1.2 * pred) and (out_p >= 0.85 * pred)),
+          TEST(lambda out_p, pred: (1.2 * (pred + 2e5)) > out_p >= (0.85 * (pred - 2e5))),
           salience=5)
-    def good_state_2(self, f, i, s, ID):
-        print("Normal production2!")
-        self.modify(f, counter=0)
+    def good_state_2(self, f, i, s, ID, c):
+        print("Normal production2! {}".format(c))
+        if c > 0:
+            c -= 1
+        else:
+            c = 0
+        self.modify(f, counter=c)
         self.retract(i)
         self.retract(s)
         self.declare(Result(WT_id=ID))
@@ -229,11 +237,15 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_3"),
-          TEST(lambda out_p, pred: (out_p < 1.1 * pred) and (out_p >= 0.85 * pred)),
+          TEST(lambda out_p, pred: (1.1 * (pred + 2e5)) > out_p >= (0.85 * (pred - 2e5))),
           salience=5)
-    def good_state_3(self, f, i, s, ID):
-        print("Normal production3!")
-        self.modify(f, counter=0)
+    def good_state_3(self, f, i, s, ID, c):
+        print("Normal production3! {}".format(c))
+        if c > 0:
+            c -= 1
+        else:
+            c = 0
+        self.modify(f, counter=c)
         self.retract(i)
         self.retract(s)
         self.declare(Result(WT_id=ID))
@@ -248,12 +260,15 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_4"),
-          TEST(lambda out_p, pred: out_p < 1.1 * pred),
-
+          TEST(lambda out_p, pred: (1.1 * (pred + 2e5)) > out_p >= (pred - 8e5)),
           salience=5)
-    def good_state_4(self, f, i, s, ID):
-        print("Normal production4!")
-        self.modify(f, counter=0)
+    def good_state_4(self, f, i, s, ID, c):
+        print("Normal production4! {}".format(c))
+        if c > 0:
+            c -= 1
+        else:
+            c = 0
+        self.modify(f, counter=c)
         self.retract(i)
         self.retract(s)
         self.declare(Result(WT_id=ID))
@@ -266,11 +281,15 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_5"),
-          TEST(lambda out_p, pred: out_p < 1.15 * pred),
+          TEST(lambda out_p, pred: (1.15 * (pred + 2e5)) > out_p >= (0.75 * pred)),
           salience=5)
-    def good_state_5(self, f, i, s, ID):
-        print("Normal production5!")
-        self.modify(f, counter=0)
+    def good_state_5(self, f, i, s, ID, c):
+        print("Normal production5! {}".format(c))
+        if c > 0:
+            c -= 1
+        else:
+            c = 0
+        self.modify(f, counter=c)
         self.retract(i)
         self.retract(s)
         self.declare(Result(WT_id=ID))
@@ -280,7 +299,8 @@ class ExpertSystem(KnowledgeEngine):
           AS.f << Counter(WT_id=MATCH.ID,
                           counter=MATCH.c),
           salience=2)
-    def reset_counter(self, f, ID, i):
+    def reset_counter(self, f, ID, i, c):
+
         self.modify(f, counter=0)
         self.retract(i)
         self.declare(Output(id=ID, response="stop", counter=0))
