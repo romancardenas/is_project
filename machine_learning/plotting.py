@@ -43,14 +43,18 @@ y_m = y_s + 2e5
 y_more = y_s.copy()
 y_less = y_s.copy()
 
-y_more = y_more *1.15
-y_less[y_l[:, 0] < 6.8e6] = y_l[y_l[:, 0] < 6.8e6] - 0.6e6
 
-y_less[y_l[:, 0] < 5.6e6] = y_l[y_l[:, 0] < 5.6e6] * 0.85
-y_more[y_m[:, 0] < 7e6] = y_m[y_m[:, 0] < 7e6] * 1.1
 
-y_less[y_l[:, 0] < 2.3e6] = y_l[y_l[:, 0] < 2.3e6] * 0.8
-y_more[y_m[:, 0] < 3.5e6] = y_m[y_m[:, 0] < 3.5e6] * 1.2
+y_less[:, 0] = 7.3e6
+y_less[y_l[:, 0] < 8.2e6] = y_l[y_l[:, 0] < 8.2e6]*0.8 + 0.8e6
+y_less[y_l[:, 0] < 5.6e6] = (y_l[y_l[:, 0] < 5.6e6]) * 1.12 - 0.9e6
+y_less[y_l[:, 0] < 2.8e6] = y_l[y_l[:, 0] < 2.8e6] * 0.8
+
+y_more[:, 0] = 7.7e6
+y_more[y_m[:, 0] < 8e6] = y_m[y_m[:, 0] < 8e6] * 0.65 + 2.5e6
+y_more[y_m[:, 0] < 5.6e6] = y_m[y_m[:, 0] < 5.6e6] * 0.76 + 1.8e6
+y_more[y_m[:, 0] < 5e6] = y_m[y_m[:, 0] < 5e6] * 1.1 + 0.2e6
+y_more[y_m[:, 0] < 2.5e6] = y_m[y_m[:, 0] < 2.5e6] * 1.2
 
 # Plot final model performance
 #plt.figure(figsize=(24, 18))
