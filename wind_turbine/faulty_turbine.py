@@ -20,7 +20,7 @@ def fum3(P, offset):
 
 
 def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5, fum=0, maxPower=7500000, reduce=0.75,
-            offset=10000, test=0):
+            offset=15000, test=0):
     data0 = data.copy()
     n = failNum
     m = 0
@@ -31,7 +31,7 @@ def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5,
         brokenStart = randint(minFaulty * 24, maxFaulty * 24) + faultyStart
         brokenEnd = randint(minBroken * 24, maxBroken * 24) + brokenStart
 
-        m = m + 1
+        m += 1
 
         i = 0
         if (fum == 0):
@@ -57,12 +57,12 @@ def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5,
                 data0.iloc[i, data0.columns.get_loc('state')] = 'r'
         return data0
     while n > 0:
-        n = n - 1
+        n -= 1
         faultyStart = randint(300 + m * s, len(data0) - s * n - 300)
         brokenStart = randint(minFaulty * 24, maxFaulty * 24) + faultyStart
         brokenEnd = randint(minBroken * 24, maxBroken * 24) + brokenStart
 
-        m = m + 1
+        m += 1
 
         i = 0
         if (fum == 0):
@@ -74,7 +74,7 @@ def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5,
         print("the engine breaks at {} and is repaired at {}. Fault type was {}".format(brokenStart, brokenEnd, method))
 
         for p in data0['output_power']:
-            i = i + 1
+            i += 1
             if (i > faultyStart) & (i < brokenStart):
                 if method == 1:
                     data0.iloc[i, data0.columns.get_loc('output_power')] = fum1(maxPower)
@@ -106,7 +106,7 @@ def fault_detected(data, dataR, posDet, repairTime=3):
                 dataF.iloc[i, dataF.columns.get_loc('state')] = 'w'
             else:
                 return dataF
-        i = i + 1
+        i += 1
     return dataF
 
 

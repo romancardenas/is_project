@@ -21,7 +21,7 @@ class WindTurbine(threading.Thread):
         self.data['state'] = pd.Series('w', index=data.index)
         self.pointer = 0
         faulty = self.data.copy()
-        self.faulty = faulty_turbine.fu_data(faulty, fum=1, test=1)
+        self.faulty = faulty_turbine.fu_data(faulty, fum=3, test=0, reduce=0.9, offset=25000)
         self.beforeEff= faulty_turbine.calculate_efficiency(self.faulty)
         self.afterEff={}
         print('Wind turbine {0} thread ready'.format(id))
@@ -87,7 +87,7 @@ class WindTurbine(threading.Thread):
         print('I could have worked for {0}, be faulty for {1} and be being repaired for {2}.'.format(self.beforeEff['working'],
                                                                                                      self.beforeEff['faulty'],
                                                                                                      self.beforeEff['broken']))
-        print('But instead I worked for {0}, be faulty for {1} and be being repaired for {2}.'.format(self.afterEff['working'],
+        print('But instead I worked for {0}, was faulty for {1} and was being repaired for {2}.'.format(self.afterEff['working'],
                                                                                                       self.afterEff['faulty'],
                                                                                                       self.afterEff['broken']))
 
