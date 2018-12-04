@@ -17,7 +17,7 @@ class MQTTAgent(threading.Thread):
         self.broker_uri = broker_uri
         self.system_info = dict()
         self.predictor = Predictor()
-        self.expert_system = ExpertSystem(n_count=10)
+        self.expert_system = ExpertSystem(n_count=5)
         print('MQTT thread ready.')
 
     def data_analysis(self, rcvd_data):

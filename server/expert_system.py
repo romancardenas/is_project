@@ -54,51 +54,59 @@ class ExpertSystem(KnowledgeEngine):
     # Folling rules sets the upper and lower limits, depening on what the power output is.
     @Rule(Input(status='active',
                 WT_id=MATCH.ID,
-                output_power=MATCH.out_p),
-          TEST(lambda out_p: out_p <= 2500000),
+                prediction=MATCH.pred),
+          TEST(lambda pred: pred <= 2500000),
           salience=7)
     def set_limit1(self, ID):
         self.declare(State(WT_id=ID, flag="L_1"))
 
     @Rule(Input(status='active',
                 WT_id=MATCH.ID,
-                output_power=MATCH.out_p),
-          TEST(lambda out_p: (2800000 >= out_p > 2500000)),
+                prediction=MATCH.pred),
+          TEST(lambda pred: (2800000 >= pred > 2500000)),
           salience=7)
     def set_limit2(self, ID):
         self.declare(State(WT_id=ID, flag="L_2"))
 
     @Rule(Input(status='active',
                 WT_id=MATCH.ID,
-                output_power=MATCH.out_p),
-          TEST(lambda out_p: (5000000 >= out_p > 2800000)),
+                prediction=MATCH.pred),
+          TEST(lambda pred: (5000000 >= pred > 2800000)),
           salience=7)
     def set_limit3(self, ID):
         self.declare(State(WT_id=ID, flag="L_3"))
 
     @Rule(Input(status='active',
                 WT_id=MATCH.ID,
-                output_power=MATCH.out_p),
-          TEST(lambda out_p: (5600000 >= out_p > 5000000)),
+                prediction=MATCH.pred),
+          TEST(lambda pred: (5600000 >= pred > 5000000)),
           salience=7)
     def set_limit4(self, ID):
         self.declare(State(WT_id=ID, flag="L_4"))
 
     @Rule(Input(status='active',
                 WT_id=MATCH.ID,
-                output_power=MATCH.out_p),
-          TEST(lambda out_p: (8000000 >= out_p > 5600000)),
+                prediction=MATCH.pred),
+          TEST(lambda pred: (7800000 >= pred > 5600000)),
           salience=7)
     def set_limit5(self, ID):
         self.declare(State(WT_id=ID, flag="L_5"))
      
     @Rule(Input(status='active',
                 WT_id=MATCH.ID,
-                output_power=MATCH.out_p),
-          TEST(lambda out_p: (out_p > 8000000)),
+                prediction=MATCH.pred),
+          TEST(lambda pred: (8200000 >= pred > 7800000)),
           salience=7)
     def set_limit6(self, ID):
         self.declare(State(WT_id=ID, flag="L_6"))
+
+    @Rule(Input(status='active',
+                WT_id=MATCH.ID,
+                prediction=MATCH.pred),
+          TEST(lambda pred: (pred > 8200000)),
+          salience=7)
+    def set_limit7(self, ID):
+        self.declare(State(WT_id=ID, flag="L_7"))
 
     @Rule(AS.i << Input(output_power=MATCH.out_p,
                         prediction=MATCH.pred,
@@ -108,7 +116,7 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_1"),
-          TEST(lambda out_p, pred: (out_p >= 1.2 * (pred + 2e5)) or (out_p < 0.8 * (pred - 2e5))),
+          TEST(lambda out_p, pred: (out_p >= 1.2*(pred + 2e5)) or (out_p < 0.8*(pred - 2e5))),
           salience=5)
     def bad_state_1(self, c, f, i, s, ID):
         print("Abnormal production1! {}".format(c+1))
@@ -127,7 +135,7 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_2"),
-          TEST(lambda out_p, pred: (out_p >= (1.1 * (pred + 2e5)+0.2e6)) or (out_p < 0.8 * (pred - 2e5))),
+          TEST(lambda out_p, pred: (out_p >= (1.1*(pred + 2e5) + 0.2e6)) or (out_p < 0.8 * (pred - 2e5))),
           salience=5)
     def bad_state_2(self, c, f, i, s, ID):
         print("Abnormal production2 {}".format(c+1))
@@ -185,9 +193,11 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_5"),
-          TEST(lambda out_p, pred: (out_p >= (0.65 * (pred + 2e5)+2.5e6)) or (out_p < (1.12 * (pred - 2e5)-0.9e6))),
+          TEST(lambda out_p, pred: (out_p >= (0.65 * (pred + 2e5)+2.5e6)) or (out_p < (0.8 * (pred - 2e5)+0.8e6))),
           salience=5)
-    def bad_state_5(self, c, f, i, s, ID):
+    def bad_state_5(self, c, f, i, s, ID, pred, out_p):
+        print('prediction: ' + str(pred))
+        print('reported: ' + str(out_p))
         print("Abnormal production5! {}".format(c+1))
         c += 1
         self.modify(f, counter=c)
@@ -203,10 +213,28 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_6"),
-          TEST(lambda out_p, pred: (out_p >= (out_p < (0.8 * (pred - 2e5)+0.8e6)),
+          TEST(lambda out_p, pred: (out_p >= 7.7e6 or out_p < (0.8 * (pred - 2e5)+0.8e6))),
           salience=5)
     def bad_state_6(self, c, f, i, s, ID):
         print("Abnormal production6! {}".format(c+1))
+        c += 1
+        self.modify(f, counter=c)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
+
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_7"),
+          TEST(lambda out_p, pred: (out_p >= 7.7e6 or out_p < 7.3e6)),
+          salience=5)
+    def bad_state_7(self, c, f, i, s, ID):
+        print("Abnormal production7! {}".format(c + 1))
         c += 1
         self.modify(f, counter=c)
         self.retract(i)
@@ -307,7 +335,7 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_5"),
-          TEST(lambda out_p, pred: (0.65 * (pred + 2e5)+2.5e6) > out_p >= (1.12 * (pred+2e5)-0.9e6))),
+          TEST(lambda out_p, pred: (0.65 * (pred + 2e5)+2.5e6) > out_p >= (0.8 * (pred-2e5)+0.8e6)),
           salience=5)
     def good_state_5(self, f, i, s, ID, c):
         print("Normal production5! {}".format(c))
@@ -328,7 +356,7 @@ class ExpertSystem(KnowledgeEngine):
                           counter=MATCH.c),
           AS.s << State(WT_id=MATCH.ID,
                         flag="L_6"),
-          TEST(lambda out_p, pred: (0.8 * (pred + 2e5)+0.8e6) > out_p),
+          TEST(lambda out_p, pred: (7.7e6 > out_p >= 0.8 * (pred - 2e5)+0.8e6)),
           salience=5)
     def good_state_6(self, f, i, s, ID, c):
         print("Normal production6! {}".format(c))
@@ -340,8 +368,28 @@ class ExpertSystem(KnowledgeEngine):
         self.retract(i)
         self.retract(s)
         self.declare(Result(WT_id=ID))
-          
-          
+
+    @Rule(AS.i << Input(output_power=MATCH.out_p,
+                        prediction=MATCH.pred,
+                        WT_id=MATCH.ID,
+                        status='active'),
+          AS.f << Counter(WT_id=MATCH.ID,
+                          counter=MATCH.c),
+          AS.s << State(WT_id=MATCH.ID,
+                        flag="L_7"),
+          TEST(lambda out_p, pred: (7.7e6 > out_p >= 7.3e6)),
+          salience=5)
+    def good_state_7(self, f, i, s, ID, c):
+        print("Normal production7! {}".format(c))
+        if c > 0:
+            c -= 1
+        else:
+            c = 0
+        self.modify(f, counter=c)
+        self.retract(i)
+        self.retract(s)
+        self.declare(Result(WT_id=ID))
+
     @Rule(AS.i << Input(WT_id=MATCH.ID,
                         status='stop'),
           AS.f << Counter(WT_id=MATCH.ID,
