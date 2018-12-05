@@ -24,6 +24,15 @@ For running the processes, the following order is recommended:
 - [optional] - `bash bash_scripts/client.sh`: Starts the RPC client (emulates the energy provider, who wants to know the status of the wind turbines)
 - `bash bash_scripts/wind_turbine_2.sh`: Starts a second wind turbine client. The system server is able to support multiple wind turbines at the same time, and it creates dynamically all the required resources for granting service to completely new wind turbines
 
+For changing the simulation parameters:
+1. Open wind_turbine/new_wind_turbine.py.
+2. Navigate to __init__ in WindTurbine class.
+3. Find the line self.faulty = faulty_turbine.fu_data().
+4. You can change the following parameters:
+	-fum = (0,1,2,3). Defines the fault to be used. 0 - picks at random from the three, 1 - random P, 2 - P*reduce, 3 - P - offset.
+	-test = (0,1). 1 initiates test mode - one fault only which starts at line 100.
+	-reduce. Used in fault number 2.
+	-offset. Used in fault number 3.
 Issues
 -
 This repository is not granted to be under constant development. If you experience any trouble, or want to ask something about the project, send an email to `rcardenas.rod@gmail.com`. However, no response is ensured.
