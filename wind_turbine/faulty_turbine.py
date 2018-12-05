@@ -80,7 +80,7 @@ def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5,
                     data0.iloc[i, data0.columns.get_loc('output_power')] = fum1(maxPower)
                     data0.iloc[i, data0.columns.get_loc('state')] = 'f'
                 elif method == 2:
-                    data0.iloc[i, data0.columns.get_loc('output_power')] = fum2(p, reduce)
+                    data0.iloc[i, data0.columns.get_loc('output_power')] = fum2(p, reduced)
                     data0.iloc[i, data0.columns.get_loc('state')] = 'f'
                 elif method == 3:
                     data0.iloc[i, data0.columns.get_loc('output_power')] = fum3(p, offset)
