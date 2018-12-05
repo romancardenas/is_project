@@ -8,8 +8,8 @@ def fum1(maxPower):
     return randint(0, maxPower)
 
 
-def fum2(P, reduce):
-    return P * reduce
+def fum2(P, reduced):
+    return P * reduced
 
 
 def fum3(P, offset):
@@ -19,7 +19,7 @@ def fum3(P, offset):
         return 0
 
 
-def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5, fum=0, maxPower=7500000, reduce=0.75,
+def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5, fum=0, maxPower=7500000, reduced=0.75,
             offset=15000, test=0):
     data0 = data.copy()
     n = failNum
@@ -48,7 +48,7 @@ def fu_data(data, failNum=2, minFaulty=4, maxFaulty=7, minBroken=3, maxBroken=5,
                 if method == 1:
                     data0.iloc[i, data0.columns.get_loc('output_power')] = fum1(maxPower)
                 elif method == 2:
-                    data0.iloc[i, data0.columns.get_loc('output_power')] = fum2(p, reduce)
+                    data0.iloc[i, data0.columns.get_loc('output_power')] = fum2(p, reduced)
                 elif method == 3:
                     data0.iloc[i, data0.columns.get_loc('output_power')] = fum3(p, offset)
                 data0.iloc[i, data0.columns.get_loc('state')] = 'f'

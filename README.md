@@ -29,9 +29,9 @@ For changing the simulation parameters:
 2. Navigate to __init__ in WindTurbine class.
 3. Find the line self.faulty = faulty_turbine.fu_data().
 4. You can change the following parameters:
-	-fum = (0,1,2,3). Defines the fault to be used. 0 - picks at random from the three, 1 - random P, 2 - P*reduce, 3 - P - offset.
+	-fum = (0,1,2,3). Defines the fault to be used. 0 - picks at random from the three, 1 - random P, 2 - P*reduced, 3 - P - offset.
 	-test = (0,1). 1 initiates test mode - one fault only which starts at line 100.
-	-reduce. Used in fault number 2.
+	-reduced. Used in fault number 2.
 	-offset. Used in fault number 3.
 Issues
 -
