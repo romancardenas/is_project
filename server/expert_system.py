@@ -400,7 +400,7 @@ class ExpertSystem(KnowledgeEngine):
                           maxim_normal=MATCH.m),
           TEST(lambda cn, c, m: ((cn>=m)&(c>0))),
           salience=2)
-    def decrease_counter(self, f, cn, c):
+    def decrease_counter1(self, f, cn, c):
         c-=1
         self.modify(f, counter=c, counter_normal=0)
     
@@ -409,7 +409,7 @@ class ExpertSystem(KnowledgeEngine):
                           maxim_normal=MATCH.m),
           TEST(lambda cn, c, m: ((cn>=m)&(c==0))),
           salience=2)
-    def decrease_counter(self, f, cn):
+    def decrease_counter2(self, f, cn):
         self.modify(f, counter_normal=0)
 
     # If we exceed the counter -> return stop
